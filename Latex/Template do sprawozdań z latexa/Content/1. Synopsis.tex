@@ -1,0 +1,113 @@
+\newpage
+\input{Content/PageDecoration}
+\section{Zadanie}
+Zaimplementuj algorytm konstruowania \textbf{drzewa AVL} metodą \textbf{połowienia binarnego} oraz algorytm konstruowania \textbf{drzewa BST} z ciągu liczb. 
+
+
+\begin{figure} [H]
+    \noindent\resizebox{\textwidth}{!}{
+\centering
+\begin{subfigure}{0.4\textwidth}
+    \centering
+    \input{Figures/Tex/avl-creation} 
+    \caption{Tworzenie drzewa AVL}
+    \label{fig:avl:create}
+\end{subfigure}
+\hfill
+\begin{subfigure}{0.4\textwidth}
+    \centering
+    \input{Figures/Tex/bst-creation} 
+    \caption{Tworzenie drzewa BST}
+    \label{fig:bst:create}
+\end{subfigure}
+}
+\end{figure}
+
+\section{Menu}
+Kiedy oczekujesz od użytkownika wprowadzenia danych, wyświetl odpowiedni znak zachęty (np. `nodes>`) .
+
+% ' nodes>' - do wprowadzenia ilości węzłów które użytkownik ma zamiar wpisać,
+
+% `insert>` - do wporwadzenia węzłów do dodania,
+
+% `remove>` - do wprowadzenia węzłów do usunięcia,
+
+% `action>` - do wprowadzenia kolejnej akcji. 
+
+Akcje wpisywane będą w postaci ciągów znaków (Print, Remove, Delte, Export, Rebalance, Exit)
+
+\begin{tcblisting}{listing engine=minted,minted style=native,
+    minted language=python,enhanced,
+    minted options={fontsize=\tiny},  
+    colback=terminalColor,colframe=terminalColor,listing only, title=\tikz {
+        \node[circle,fill=Button1,inner sep=3pt] (c) at (0,0){};
+        \node[circle,fill=Button2,inner sep=3pt] (c) at (0.5,0){};
+        \node[circle,fill=Button3,inner sep=3pt] (c) at (1,0){};
+    } ~~~~~~Terminal}
+>>>  ./program --tree AVL <<< 2, 5, 10, 12, 13, 6, 9
+ nodes> 7
+insert> 2 5 10 12 13 6 9
+action> Help
+Help        Show this message
+Print       Print the tree usin In-order, Pre-order, Post-order
+Remove      Remove elements of the tree 
+Delete      Delete whole tree
+Export      Export the tree to tickzpicture
+Rebalance   Rebalance the tree
+Exit        Exits the program (same as ctrl+D)
+action> Print
+...prints the tree...
+action> Remove
+remove> 10 12
+action> Rebalance
+(ctrl + D)
+Program exited with status: 0
+>>>
+\end{tcblisting}
+
+Program powinien także obsługiwać podawanie tzw. heredoc oraz `przekierowanie z pliku`. Ale nie martwcie się, jeśli program da się wpisać z palca, to obsłuży on także `heredoc` oraz `przekierowanie z pliku`.
+
+
+\begin{figure}[H]
+\begin{subfigure}{0.48\textwidth}
+    \centering
+\begin{tcblisting}{listing engine=minted,minted style=native,
+    minted language=python,enhanced,
+    minted options={fontsize=\tiny},  
+    colback=terminalColor,colframe=terminalColor,listing only, title=\tikz {
+        \node[circle,fill=Button1,inner sep=3pt] (c) at (0,0){};
+        \node[circle,fill=Button2,inner sep=3pt] (c) at (0.5,0){};
+        \node[circle,fill=Button3,inner sep=3pt] (c) at (1,0){};
+    } ~~~~~~Terminal}
+>>>  ./program --tree AVL << EOD
+> 7
+> 2 5 10 12 13 6 9
+> Print
+> Exit
+> EOD
+\end{tcblisting}
+    \caption{Heredoc}
+    \label{fig:avl:create}
+\end{subfigure}
+\hfill
+\begin{subfigure}{0.48\textwidth}
+    \centering
+\begin{tcblisting}{listing engine=minted,minted style=native,
+    minted language=python,enhanced,
+    minted options={fontsize=\tiny},  
+    colback=terminalColor,colframe=terminalColor,listing only, title=\tikz {
+        \node[circle,fill=Button1,inner sep=3pt] (c) at (0,0){};
+        \node[circle,fill=Button2,inner sep=3pt] (c) at (0.5,0){};
+        \node[circle,fill=Button3,inner sep=3pt] (c) at (1,0){};
+    } ~~~~~~Terminal}
+>>> more plik.txt
+7
+2 5 10 12 13 6 9
+Print
+Exit
+>>>  ./program --tree AVL < plik.txt
+\end{tcblisting}
+    \caption{Przekierowanie z pliku}
+    \label{fig:bst:create}
+\end{subfigure}
+\end{figure}

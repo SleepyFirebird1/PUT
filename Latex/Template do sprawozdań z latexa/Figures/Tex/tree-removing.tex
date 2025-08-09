@@ -1,0 +1,59 @@
+\input{Settings/TcblistingMintedTerminal}
+\input{Settings/TikzTreeStyle}
+
+\begin{TcblistingMintedTerminal}
+action> Delete
+ nodes> 3
+delete> 2 5 10
+
+\end{TcblistingMintedTerminal}
+
+\begin{TikzTreeStyle}
+\node[draw=black,dash pattern= on 3pt off 5pt,thick,postaction={draw,red,dash pattern= on 3pt off 5pt,dash phase=4pt,thick}] at (0,0) {9} 
+child {node {5}
+  child {node {2}}
+  child {node [draw=black,dash pattern= on 3pt off 5pt,thick,postaction={draw,green,dash pattern= on 3pt off 5pt,dash phase=4pt,thick}] {6}}
+}
+child {node {12}
+  child {node {10}}
+  child {node {13}}
+};
+
+\node at (4,0) (c) {6} 
+child {node {5}
+  child {node {2} }
+  child [missing]
+}
+child {node [draw=black,dash pattern= on 3pt off 5pt,thick,postaction={draw,red,dash pattern= on 3pt off 5pt,dash phase=4pt,thick}] {12}
+  child {node [draw=black,dash pattern= on 3pt off 5pt,thick,postaction={draw,green,dash pattern= on 3pt off 5pt,dash phase=4pt,thick}] {10}}
+  child {node {13}}
+};
+
+\node at (0,-3.5) (b) {6} 
+child {node {5}
+  child {node {2} }
+  child [missing]
+}
+child {node {10}
+  child[missing]
+  child {node [draw=black,dash pattern= on 3pt off 5pt,thick,postaction={draw,red,dash pattern= on 3pt off 5pt,dash phase=4pt,thick}] {13}}
+};
+
+
+\node at (4,-3.5) (a) {6} 
+child {node {5}
+  child {node {2} }
+  child [missing]
+}
+child {node {10}};
+
+%Add arrows
+\path[double, draw=black, ->] (1.5,  -1) -- (2.5,  -1);
+\path[double, draw=black, ->] (2.4,-2.7) -- (1.6,  -3.2);
+\path[double, draw=black, ->] (1.5,-4.5) -- (2.5,-4.5);
+
+\node[draw=none,fill=none] (1) [label=above:{(c)}] at (2,   -1) {};
+\node[draw=none,fill=none] (1) [label=above:{(b)}] at (2, -3.2) {};
+\node[draw=none,fill=none] (1) [label=above:{(a)}] at (2, -4.5) {};
+    
+\end{TikzTreeStyle}
