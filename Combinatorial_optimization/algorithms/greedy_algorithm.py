@@ -1,4 +1,4 @@
-from graph_utils import is_neighbour, sort_nodes_by_degree
+from graph.graph_utils import is_neighbour, sort_nodes_by_degree
 
 
 def greedy_coloring(graph):
