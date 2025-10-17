@@ -5,4 +5,7 @@ if __name__ == "__main__":
     file_path = "./utils/instance.txt"
     num_nodes, edges = read_from_file(file_path)
     adjacency_matrix = matrix_from_edges(num_nodes, edges)
-    print(greedy_coloring(adjacency_matrix))
+    colored_nodes = greedy_coloring(adjacency_matrix)
+    print("Used colors: ", max(colored_nodes))
+    print("Node colors: ", colored_nodes)
+ 

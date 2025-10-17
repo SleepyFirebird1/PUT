@@ -1,6 +1,6 @@
 from graph.graph_utils import is_neighbour, sort_nodes_by_degree
 
-
+ 
 def greedy_coloring(graph):
     num_nodes = len(graph)
     color = [0] * (num_nodes)
