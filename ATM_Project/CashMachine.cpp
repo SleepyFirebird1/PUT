@@ -1,5 +1,5 @@
 // CashMachine.cpp
-#include "CashStorage.h"
+#include "CashStorage.cpp"
 
 #include <iostream>
 #include <sstream>
