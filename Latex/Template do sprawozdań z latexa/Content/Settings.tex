@@ -1,0 +1,32 @@
+\newcommand\reporttitle{Konspekt}
+\newcommand\reportsubtitle{course code, name - Qx (202x)}
+\definecolor{PUT-Blue}{HTML}{00618E}
+\definecolor{Light-Gray}{HTML}{F5F3F1}
+\definecolor{Gray}{HTML}{A5A29D}
+\definecolor{Medium-Gray}{HTML}{52514F}
+\definecolor{Dark-Gray}{HTML}{21201F}
+
+% Change bullet style for level 1, 2 and 3 respectively for enumerate
+\renewcommand{\labelenumi}{\textbf{\textcolor{PUT-Blue}{\arabic*.}}}% level 1
+\renewcommand{\labelenumii}{\textbf{\textcolor{PUT-Blue}{[\alph*]}}}% level 2
+\renewcommand{\labelenumiii}{\textbf{\textcolor{PUT-Blue}{\roman*.}}}% level 3
+
+\renewcommand{\labelitemi}{\textbf{\textcolor{PUT-Blue}{$\circ$}}}% level 1
+
+
+\newcommand{\putbf}[1]{\textbf{\textcolor{PUT-Blue}{#1}}}
+
+% Formats section, subsection and subsubsection titles respectively 
+\titleformat{\section}{\sffamily\color{PUT-Blue}\Large\bfseries}{\thesection\enskip\color{gray}\textbar\enskip}{0cm}{} % Formats section titles
+
+\titleformat{\subsection}{\sffamily\color{PUT-Blue}\large\bfseries}{\thesubsection\enskip\color{gray}\textbar\enskip}{0cm}{} % Formats subsection titles
+
+\titleformat{\subsubsection}{\sffamily\color{PUT-Blue}\bfseries}{\thesubsubsection\enskip\color{gray}\textbar\enskip}{0cm}{} % Formats subsubsection titles
+
+% Removes indent when starting a new paragraph
+\setlength\parindent{0pt}
+
+\definecolor{terminalColor}{RGB}{38,50,56}
+\definecolor{Button1}{RGB}{254,94,86}
+\definecolor{Button2}{RGB}{254,188,45}
+\definecolor{Button3}{RGB}{38,202,59}

@@ -1,0 +1,28 @@
+\input{Settings/TcblistingMintedTerminal}
+\input{Settings/TikzTreeStyle}
+
+\begin{TcblistingMintedTerminal}
+>>>  ./program --tree BST <<< 7 2 5 10 12 13 6 9
+ nodes> 7
+insert> 2 5 10 12 13 6 9
+Inserting: 2, 5, 10, 12, 13, 6, 9
+action>
+
+\end{TcblistingMintedTerminal}
+
+\begin{TikzTreeStyle}
+\node {2}
+child[missing]
+child 
+{ node {5}
+  child
+  { node {6}
+    child[missing]
+    child { node {9} } }
+  child 
+  { node {12}
+    child { node {10} }
+    child { node {13} } }
+};
+\path[draw=none] (0,-3) -- (0,4mm); %Set tikzpicture height to 34mm
+\end{TikzTreeStyle}
