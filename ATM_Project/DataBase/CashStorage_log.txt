@@ -1,0 +1,38 @@
+=== 2025-10-23 19:42:41 ===
+Kwota depozytu: 350 PLN
+Dodano:
+200 1
+100 1
+50 1
+Stan po operacji:
+500 20
+200 101
+100 301
+50 51
+
+=== 2025-10-23 19:48:55 ===
+Operacja: WYPŁATA
+Kwota: 350 PLN
+Pobrano:
+200 1
+100 1
+50 1
+Stan po operacji:
+500 20
+200 100
+100 300
+50 50
+
+=== 2025-10-23 19:54:10 ===
+Operacja: WYPŁATA
+Kwota: 1250 PLN
+Pobrano:
+500 2
+200 1
+50 1
+Stan po operacji:
+500 18
+200 99
+100 300
+50 49
+
