@@ -9,15 +9,18 @@
 #include <filesystem>
 #include <stdexcept>
 
-namespace fs = std::filesystem;
+using namespace std;
+
+
+namespace fs = filesystem;
 
 class CashStorage {
 protected:
-    std::vector<int> denominations{500, 200, 100, 50}; // zawsze malejąco
-    std::vector<long long> quantities{0,0,0,0};
+    vector<int> denominations{500, 200, 100, 50}; // zawsze malejąco
+    vector<long long> quantities{0,0,0,0};
 
     // tworzy katalog rodzica pliku, jeśli nie istnieje
-    bool ensureParentDir(const std::string &path) {
+    bool ensureParentDir(const string &path) {
         try {
             fs::path p(path);
             fs::path parent = p.parent_path();
@@ -36,38 +39,38 @@ public:
 
     // Wczytuje plik w formacie:
     // <nominał> <ilość>
-    bool loadFromFile(const std::string &path) {
-        std::ifstream in(path);
+    bool loadFromFile(const string &path) {
+        ifstream in(path);
         if (!in.is_open()) {
-            std::cerr << "Nie mozna otworzyc pliku: " << path << " (utworzę plik z zerami)." << std::endl;
+            cerr << "Nie mozna otworzyc pliku: " << path << " (utworzę plik z zerami)." << endl;
             if (!ensureParentDir(path) || !saveToFile(path)) {
-                std::cerr << "Nie udalo sie utworzyc pliku: " << path << std::endl;
+                cerr << "Nie udalo sie utworzyc pliku: " << path << endl;
                 return false;
             }
             return true;
         }
 
-        std::fill(quantities.begin(), quantities.end(), 0);
+        fill(quantities.begin(), quantities.end(), 0);
 
         int denom;
         long long qty;
         while (in >> denom >> qty) {
-            auto it = std::find(denominations.begin(), denominations.end(), denom);
+            auto it = find(denominations.begin(), denominations.end(), denom);
             if (it != denominations.end()) {
-                size_t idx = std::distance(denominations.begin(), it);
+                size_t idx = distance(denominations.begin(), it);
                 if (qty < 0) {
-                    std::cerr << "Ujemna ilosc w pliku dla nominału " << denom << " - ustawiam 0." << std::endl;
+                    cerr << "Ujemna ilosc w pliku dla nominału " << denom << " - ustawiam 0." << endl;
                     quantities[idx] = 0;
                 } else {
                     quantities[idx] = qty;
                 }
             } else {
-                std::cerr << "Ostrzeżenie: nieznany nominał w pliku: " << denom << " - pomijam." << std::endl;
+                cerr << "Ostrzeżenie: nieznany nominał w pliku: " << denom << " - pomijam." << endl;
             }
         }
 
         if (in.bad()) {
-            std::cerr << "Blad podczas czytania pliku " << path << std::endl;
+            cerr << "Blad podczas czytania pliku " << path << endl;
             return false;
         }
 
@@ -76,14 +79,14 @@ public:
     }
 
     // Zapisuje aktualne stany do pliku (nadpisuje)
-    bool saveToFile(const std::string &path) {
+    bool saveToFile(const string &path) {
         if (!ensureParentDir(path)) {
-            std::cerr << "Nie mozna utworzyc katalogu dla pliku: " << path << std::endl;
+            cerr << "Nie mozna utworzyc katalogu dla pliku: " << path << endl;
             return false;
         }
-        std::ofstream out(path);
+        ofstream out(path);
         if (!out.is_open()) {
-            std::cerr << "Nie mozna otworzyc pliku do zapisu: " << path << std::endl;
+            cerr << "Nie mozna otworzyc pliku do zapisu: " << path << endl;
             return false;
         }
 
@@ -94,23 +97,23 @@ public:
         return true;
     }
 
-    const std::vector<int>& getDenominations() const { return denominations; }
-    const std::vector<long long>& getQuantities() const { return quantities; }
+    const vector<int>& getDenominations() const { return denominations; }
+    const vector<long long>& getQuantities() const { return quantities; }
 
     // Dodaje / odejmuje banknoty (count może być ujemny)
     void addNotes(size_t index, long long count) {
-        if (index >= quantities.size()) throw std::out_of_range("Index poza zasiegiem");
+        if (index >= quantities.size()) throw out_of_range("Index poza zasiegiem");
         long long newVal = quantities[index] + count;
         if (newVal < 0) {
-            throw std::runtime_error("Operacja prowadzi do ujemnej liczby banknotow dla nominalu " + std::to_string(denominations[index]));
+            throw runtime_error("Operacja prowadzi do ujemnej liczby banknotow dla nominalu " + to_string(denominations[index]));
         }
         quantities[index] = newVal;
     }
 
     void printStorage() const {
-        std::cout << "Aktualny stan magazynu banknotow:\n";
+        cout << "Aktualny stan magazynu banknotow:\n";
         for (size_t i = 0; i < denominations.size(); ++i) {
-            std::cout << denominations[i] << " : " << quantities[i] << '\n';
+            cout << denominations[i] << " : " << quantities[i] << '\n';
         }
     }
 };

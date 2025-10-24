@@ -36,3 +36,29 @@ Stan po operacji:
 100 300
 50 49
 
+=== 2025-10-23 20:01:54 ===
+Operacja: WYPŁATA
+Kwota: 1250 PLN
+Pobrano:
+500 2
+200 1
+50 1
+Stan po operacji:
+500 16
+200 98
+100 300
+50 48
+
+=== 2025-10-23 20:02:12 ===
+Operacja: WYPŁATA
+Kwota: 1250 PLN
+Pobrano:
+500 2
+200 1
+50 1
+Stan po operacji:
+500 14
+200 97
+100 300
+50 47
+

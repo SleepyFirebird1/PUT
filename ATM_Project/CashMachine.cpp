@@ -85,7 +85,7 @@ public:
 
         for (size_t i = 0; i < denominations.size(); ++i) {
             long long want = remaining / denominations[i];
-            long long can = std::min(want, quantities[i]);
+            long long can = min(want, quantities[i]);
             if (can > 0) {
                 toRemove[i] = can;
                 remaining -= can * denominations[i];
@@ -126,7 +126,7 @@ public:
 private:
     bool appendLog(const string &logPath, const string &operation, const vector<long long> &changed, long long totalAmount) {
         if (!ensureParentDir(logPath)) return false;
-        std::ofstream log(logPath, ios::app);
+        ofstream log(logPath, ios::app);
         if (!log.is_open()) return false;
 
         time_t t = time(nullptr);
@@ -152,11 +152,11 @@ private:
 
 // Pomocniczna funkcja wczytania poprawnej liczby całkowitej z wejścia
 bool readLongLong(long long &out) {
-    std::string s;
-    if (!(std::cin >> s)) return false;
+    string s;
+    if (!(cin >> s)) return false;
     try {
         size_t pos;
-        long long val = std::stoll(s, &pos);
+        long long val = stoll(s, &pos);
         if (pos != s.size()) return false;
         out = val;
         return true;
@@ -189,7 +189,7 @@ int main() {
         long long choice;
         if (!readLongLong(choice)) {
             cerr << "Niepoprawne wejscie. Wpisz liczbę 1-4.\n";
-            std::cin.clear();
+            cin.clear();
             continue;
         }
 
