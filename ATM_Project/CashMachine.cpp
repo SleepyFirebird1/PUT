@@ -15,58 +15,123 @@ class CashDispenser : public CashStorage {
 public:
     CashDispenser() = default;
 
-    bool depositAmount(long long amount, const string &dbPath, const string &logPath) {
-        if (amount <= 0) {
-            cerr << "Blad: kwota do depozytu musi byc dodatnia.\n";
-            return false;
-        }
-
-        int smallest = denominations.back();
-        if (amount % smallest != 0) {
-            cerr << "Blad: kwota musi byc podzielna przez najmniejszy nominał (" << smallest << ").\n";
-            return false;
-        }
-
-        vector<long long> toAdd(denominations.size(), 0);
-        long long remaining = amount;
-        for (size_t i = 0; i < denominations.size(); ++i) {
-            long long cnt = remaining / denominations[i];
-            if (cnt > 0) {
-                toAdd[i] = cnt;
-                remaining -= cnt * denominations[i];
-            }
-        }
-
-        if (remaining != 0) {
-            cerr << "Nie mozna rozlozyc kwoty przy uzyciu dostepnych nominałów.\n";
-            return false;
-        }
-
-        try {
-            for (size_t i = 0; i < toAdd.size(); ++i) {
-                if (toAdd[i] != 0) addNotes(i, toAdd[i]);
-            }
-        } catch (const exception &e) {
-            cerr << "Blad przy aktualizacji stanu: " << e.what() << endl;
-            return false;
-        }
-
-        if (!saveToFile(dbPath)) {
-            cerr << "Blad: nie udalo sie zapisac stanu do bazy (" << dbPath << ").\n";
-            return false;
-        }
-
-        if (!appendLog(logPath, "WPŁATA", toAdd, amount)) {
-            cerr << "Uwaga: nie udalo sie zapisac logu.\n";
-        }
-
-        cout << "Przyjeto depozyt: " << amount << " PLN\n";
-        cout << "Rozklad dodanych banknotow:\n";
-        for (size_t i = 0; i < denominations.size(); ++i)
-            if (toAdd[i] > 0) cout << "  " << denominations[i] << " PLN : " << toAdd[i] << " szt.\n";
-
-        return true;
+    bool depositAmount(long long amount, long long number, const string &dbPath, const string &logPath) {
+    if (amount <= 0) {
+        cerr << "Blad: kwota do depozytu musi byc dodatnia.\n";
+        return false;
     }
+    if (number <= 0) {
+        cerr << "Blad: liczba banknotow musi byc dodatnia.\n";
+        return false;
+    }
+
+    const long long MAX_BANKNOTS = 200; // możesz zmienić limit
+    const long long MAX_AMOUNT = 100000; // zgodnie z main()
+    if (amount > MAX_AMOUNT) {
+        cerr << "Blad: przekroczono maksymalna kwote (" << MAX_AMOUNT << ")\n";
+        return false;
+    }
+    if (number > MAX_BANKNOTS) {
+        cerr << "Blad: przekroczono maksymalna ilosc banknotow (" << MAX_BANKNOTS << ")\n";
+        return false;
+    }
+
+    int smallest = denominations.back();
+    if (amount % smallest != 0) {
+        cerr << "Blad: kwota musi byc podzielna przez najmniejszy nominał (" << smallest << ").\n";
+        return false;
+    }
+
+    // Zamień wartości na "jednostki" 50zl, by zmniejszyć DP (np. 500 -> 10)
+    int unit = smallest; // 50
+    int m = denominations.size();
+    vector<int> denomUnits(m);
+    for (size_t i = 0; i < m; ++i) denomUnits[i] = denominations[i] / unit;
+
+    int amountUnits = static_cast<int>(amount / unit);
+    int num = static_cast<int>(number);
+
+    // Szybkie warunki niepowodzenia:
+    // - zbyt wiele banknotów (nawet gdy wszystkie to 50) -> każdy banknot przynosi min 1 jednostkę
+    if (num > amountUnits) {
+        cerr << "Blad: podana liczba banknotow jest za duza - nawet wszystkie 50 PLN nie daja takiej liczby banknotow.\n";
+        return false;
+    }
+    // - zbyt malo banknotów (nawet gdy wszystkie to największy nominał)
+    int maxUnitPerNote = denomUnits.front(); // np 500->10
+    if ((long long)num * maxUnitPerNote < amountUnits) {
+        cerr << "Blad: podana liczba banknotow jest za mala do uzyskania tej kwoty (brakuje miejsca na nominały).\n";
+        return false;
+    }
+
+    // DP: prev[count][units] = indeks nominału użytego ostatnio lub -1 (nieosiągalne),
+    // bazowy prev[0][0] = -2 (oznacza osiągalne bez wyboru)
+    vector<vector<int>> prev(num + 1, vector<int>(amountUnits + 1, -1));
+    prev[0][0] = -2;
+
+    // Wypełniamy warstwowo po liczbie banknotów; przeglądamy nominały w kolejności malejącej,
+    // aby preferować większe nominały przy pierwszym znalezieniu rozwiązania.
+    for (int cnt = 1; cnt <= num; ++cnt) {
+        for (int u = 0; u <= amountUnits; ++u) {
+            if (prev[cnt][u] != -1) continue; // już oznaczony (opcjonalnie)
+            for (size_t j = 0; j < (size_t)m; ++j) {
+                int d = denomUnits[j];
+                if (u - d < 0) continue;
+                if (prev[cnt - 1][u - d] != -1) {
+                    prev[cnt][u] = static_cast<int>(j); // użyto nominału j jako ostatniego
+                    break; // preferujemy pierwszy znaleziony nominał (większe są na początku)
+                }
+            }
+        }
+    }
+
+    if (prev[num][amountUnits] == -1) {
+        cerr << "Nie znaleziono kombinacji " << number << " banknotow, ktore daja kwote " << amount << " PLN.\n";
+        return false;
+    }
+
+    // Odtwórz rozwiązanie
+    vector<long long> toAdd(m, 0);
+    int curU = amountUnits;
+    int curCnt = num;
+    while (curCnt > 0) {
+        int j = prev[curCnt][curU];
+        if (j < 0 || j >= m) {
+            // to nie powinno się zdarzyć
+            cerr << "Blad odtwarzania rozwiazania.\n";
+            return false;
+        }
+        toAdd[j] += 1;
+        curU -= denomUnits[j];
+        curCnt -= 1;
+    }
+
+    // Zastosuj zmiany (dodajemy banknoty do magazynu)
+    try {
+        for (size_t i = 0; i < toAdd.size(); ++i) {
+            if (toAdd[i] != 0) addNotes(i, toAdd[i]);
+        }
+    } catch (const exception &e) {
+        cerr << "Blad przy aktualizacji stanu: " << e.what() << endl;
+        return false;
+    }
+
+    if (!saveToFile(dbPath)) {
+        cerr << "Blad: nie udalo sie zapisac stanu do bazy (" << dbPath << ").\n";
+        return false;
+    }
+
+    if (!appendLog(logPath, "WPŁATA", toAdd, amount)) {
+        cerr << "Uwaga: nie udalo sie zapisac logu.\n";
+    }
+
+    cout << "Przyjeto depozyt: " << amount << " PLN w " << number << " banknotach\n";
+    cout << "Rozklad dodanych banknotow:\n";
+    for (size_t i = 0; i < denominations.size(); ++i)
+        if (toAdd[i] > 0) cout << "  " << denominations[i] << " PLN : " << toAdd[i] << " szt.\n";
+
+    return true;
+}
 
     bool withdrawAmount(long long amount, const string &dbPath, const string &logPath) {
         if (amount <= 0) {
@@ -194,13 +259,24 @@ int main() {
         }
 
         if (choice == 1) {
-            cout << "Podaj kwote do wpłaty (liczba całkowita, bez PLN): ";
+            cout << "Podaj kwote do wpłaty (liczba całkowita, bez PLN maks 100 000PLN): ";
+            long long number;
             long long amount;
             if (!readLongLong(amount)) {
                 cerr << "Niepoprawne dane wejsciowe. Oczekiwano liczby calkowitej.\n";
                 continue;
             }
-            if (!dispenser.depositAmount(amount, dbPath, logPath)) {
+            if(amount>100000){
+                cerr << "Niepoprawne dane wejsciowe. Maksymalna kwota wpłaty to 100 000 PLN.\n";
+                continue;
+            }
+            cout << "Podaj liczbe banknotów do wpłaty (max 200szt): ";
+            if (!readLongLong(number)) {
+                cerr << "Niepoprawne dane wejsciowe. Oczekiwano liczby calkowitej.\n";
+                continue;
+            }
+
+            if (!dispenser.depositAmount(amount,number, dbPath, logPath)) {
                 cerr << "Operacja wpłaty nie powiodła się.\n";
             }
         } else if (choice == 2) {
