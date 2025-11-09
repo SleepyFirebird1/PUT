@@ -187,7 +187,26 @@ public:
 
         return true;
     }
+    bool canDispense(long long amount) {
+    if (amount <= 0) return false;
 
+    vector<long long> temp_quantities = quantities;
+    long long remaining = amount;
+
+    for (size_t i = 0; i < denominations.size(); ++i) {
+        if (remaining == 0) break;
+        if (denominations[i] > remaining) continue;
+
+        long long needed = remaining / denominations[i];
+        long long can_give = min(needed, temp_quantities[i]);
+
+        if (can_give > 0) {
+            remaining -= can_give * denominations[i];
+        }
+    }
+
+    return remaining == 0;
+    }
 private:
     bool appendLog(const string &logPath, const string &operation, const vector<long long> &changed, long long totalAmount) {
         if (!ensureParentDir(logPath)) return false;
@@ -230,6 +249,7 @@ bool readLongLong(long long &out) {
     }
 }
 
+/*
 int main() {
     const string dbPath = "DataBase/CashStorage.txt";
     const string logPath = "DataBase/CashStorage_log.txt";
@@ -301,3 +321,4 @@ int main() {
 
     return 0;
 }
+*/
