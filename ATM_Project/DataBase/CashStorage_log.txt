@@ -108,3 +108,84 @@ Stan po operacji:
 100 301
 50 47
 
+=== 2025-11-09 17:52:39 ===
+Operacja: WPŁATA
+Kwota: 100 PLN
+Dodano:
+100 1
+Stan po operacji:
+500 0
+200 0
+100 2
+50 0
+
+=== 2025-11-09 17:53:39 ===
+Operacja: WPŁATA
+Kwota: 100 PLN
+Dodano:
+100 1
+Stan po operacji:
+500 0
+200 0
+100 3
+50 0
+
+=== 2025-11-09 18:08:06 ===
+Operacja: WYPŁATA
+Kwota: 100 PLN
+Pobrano:
+100 1
+Stan po operacji:
+500 0
+200 0
+100 2
+50 0
+
+=== 2025-11-09 18:12:35 ===
+Operacja: WPŁATA
+Kwota: 1000 PLN
+Dodano:
+500 2
+Stan po operacji:
+500 2
+200 0
+100 2
+50 0
+
+=== 2025-11-09 19:01:37 ===
+Operacja: WPŁATA
+Kwota: 500 PLN
+Dodano:
+500 1
+Stan po operacji:
+500 3
+200 0
+100 2
+50 0
+
+=== 2025-11-09 19:12:10 ===
+Operacja: WPŁATA
+Kwota: 10000 PLN
+Dodano:
+500 18
+200 2
+100 2
+50 8
+Stan po operacji:
+500 21
+200 2
+100 4
+50 8
+
+=== 2025-11-09 19:12:53 ===
+Operacja: WYPŁATA
+Kwota: 10600 PLN
+Pobrano:
+500 21
+100 1
+Stan po operacji:
+500 0
+200 2
+100 3
+50 8
+

@@ -2,32 +2,37 @@
 #include <fstream>
 #include <nlohmann/json.hpp>
 
+using namespace std;
 using json = nlohmann::json;
 
 class BankDatabaseHandler {
 public:
     json db;
 
-    void loadData(const std::string &filename) {
-        std::ifstream file(filename);
+    bool loadData(const string &filename) {
+        ifstream file(filename);
         if (file.is_open()) {
             file >> db;
+            return true;
         } else {
-            std::cerr << "Błąd otwierania pliku, wczytywanie" << std::endl;
+            cerr << "Błąd otwierania pliku, wczytywanie\n";
+            return false;
         }
     }
 
-    void saveData(const std::string &filename) {
-        std::ofstream file(filename);
+    bool saveData(const string &filename) {
+        ofstream file(filename);
         if (file.is_open()) {
             file << db.dump(4);
+            return true;
         } else {
-            std::cerr << "Błąd otwierania pliku, zapisywanie" << std::endl;
+            cerr << "Błąd otwierania pliku, zapisywanie\n";
+            return false;
         }
     }
 
 
-    void addData(const std::string &accountId, const std::string &cardNumber, const std::string &pin, const double &balance) {
+    bool addData(const string &accountId, const string &cardNumber, const string &pin, const long long &balance) {
         json account = {
             {"accountId", accountId},
             {"cardNumber", cardNumber},
@@ -35,49 +40,58 @@ public:
             {"balance", balance}
         };
         db[cardNumber] = account;
+        return true;
     }
 
-    void deleteData(const std::string &cardNumber) {
+    bool deleteData(const string &cardNumber) {
         if (db.contains(cardNumber)) {
             db.erase(cardNumber);
+            return true;
         } else {
-            std::cerr << "Błąd numeru karty" << std::endl;
+            cerr << "Błąd numeru karty\n";
+            return false;
         }
     }
 
-    double getBalance(const std::string &cardNumber) {
+    long long getBalance(const string &cardNumber) {
         if (db.contains(cardNumber)) {
             return db[cardNumber]["balance"];
         } else {
-            std::cerr << "Błąd numeru karty" << std::endl;
+            cerr << "Błąd numeru karty\n";
             return -1;
         }
     }
 
-    void changeBalance(const std::string &cardNumber, double amount) {
+    bool changeBalance(const string &cardNumber, long long amount) {
         if (db.contains(cardNumber)) {
             double currentBalance = db[cardNumber]["balance"];
             if (amount < 0 && -amount <= currentBalance) {
                 db[cardNumber]["balance"] = currentBalance + amount;
+                return true;
             } else if (amount >= 0) {
                 db[cardNumber]["balance"] = currentBalance + amount;
+                return true;
             } else {
-                std::cerr << "Nie wystarczająca ilość środkow" << std::endl;
+                cerr << "Nie wystarczająca ilość środkow\n";
+                return false;
             }
         } else {
-            std::cerr << "Błąd numeru karty" << std::endl;
+            cerr << "Błąd numeru karty\n";
+            return false;
         }
     }
 
-    void changePin(const std::string &cardNumber, const std::string &newPin) {
+    bool changePin(const string &cardNumber, const string &newPin) {
         if (db.contains(cardNumber)) {
             db[cardNumber]["pin"] = newPin;
+            return true;
         } else {
-            std::cerr << "Błąd numeru karty" << std::endl;
+            cerr << "Błąd numeru karty\n";
+            return false;
         }
     }
 
-    int checkPin(const std::string &cardNumber, const std::string &pinCheck) {
+    int checkPin(const string &cardNumber, const string &pinCheck) {
         if (db.contains(cardNumber)) {
             if (db[cardNumber]["pin"] == pinCheck) {
                 return 1;
@@ -85,8 +99,11 @@ public:
                 return 0;
             }
         } else {
-            std::cerr << "Błąd numeru karty" << std::endl;
+            cerr << "Błąd numeru karty\n";
             return -1;
         }
+    }
+    bool existenceOfAccount(const string &cardNumber) {
+        return db.contains(cardNumber);
     }
 };
