@@ -1,8 +1,18 @@
 {
+    "1111": {
+        "accountId": "1111",
+        "balance": 1900.0,
+        "cardNumber": "1111",
+        "pin": "1111",
+        "isBlocked": false
+
+    },
     "1234": {
         "accountId": "1234",
-        "balance": 0.0,
+        "balance": 1000.0,
         "cardNumber": "1234",
-        "pin": "1234"
+        "pin": "1234",
+        "isBlocked": false
+        
     }
 }
