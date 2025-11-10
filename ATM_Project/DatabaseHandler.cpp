@@ -12,11 +12,18 @@ public:
     bool loadData(const string &filename) {
         ifstream file(filename);
         if (file.is_open()) {
-            file >> db;
+            try {
+                file >> db;
+            } catch (json::parse_error& e) {
+                cerr << "Blad parsowania JSON: " << e.what() << "\nTworze nowa, pusta baze.\n";
+                db = json::object(); 
+            }
+            file.close();
             return true;
         } else {
-            cerr << "Błąd otwierania pliku, wczytywanie\n";
-            return false;
+            cerr << "Błąd otwierania pliku, wczytywanie. Tworze nowy plik.\n";
+            db = json::object(); 
+            return true; 
         }
     }
 
@@ -24,6 +31,7 @@ public:
         ofstream file(filename);
         if (file.is_open()) {
             file << db.dump(4);
+            file.close();
             return true;
         } else {
             cerr << "Błąd otwierania pliku, zapisywanie\n";
@@ -37,7 +45,8 @@ public:
             {"accountId", accountId},
             {"cardNumber", cardNumber},
             {"pin", pin},
-            {"balance", balance}
+            {"balance", balance},
+            {"isBlocked", false} 
         };
         db[cardNumber] = account;
         return true;
@@ -91,18 +100,33 @@ public:
         }
     }
 
+    bool changeBlockStatus(const string &cardNumber, bool shouldBeBlocked) {
+        if (db.contains(cardNumber)) {
+            db[cardNumber]["isBlocked"] = shouldBeBlocked;
+            return true;
+        } else {
+            cerr << "Błąd numeru karty\n";
+            return false;
+        }
+    }
+
+    
     int checkPin(const string &cardNumber, const string &pinCheck) {
         if (db.contains(cardNumber)) {
+            if (db[cardNumber].value("isBlocked", false) == true) {
+                return -2; // Konto jest zablokowane
+            }
             if (db[cardNumber]["pin"] == pinCheck) {
-                return 1;
+                return 1; // PIN poprawny
             } else {
-                return 0;
+                return 0; // Zły PIN
             }
         } else {
             cerr << "Błąd numeru karty\n";
-            return -1;
+            return -1; // Nie ma takiego konta
         }
     }
+    
     bool existenceOfAccount(const string &cardNumber) {
         return db.contains(cardNumber);
     }
