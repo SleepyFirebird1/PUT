@@ -2,6 +2,7 @@
 #include "CashMachine.cpp"
 #include <iostream>
 #include <string>
+#include <chrono>
 
 using namespace std;
 
@@ -63,11 +64,25 @@ public:
 // Funkcja obsługująca menu dla zalogowanego użytkownika
 void showLoggedInMenu(string cardNumber) {
     Transaction transaction; 
-    BankDatabaseHandler dbHandler; 
+    BankDatabaseHandler dbHandler;
+    
+    auto loginTime = chrono::steady_clock::now();
+    const int SESSION_TIMEOUT_MINUTES = 1;
+    const long long TIMEOUT_SECONDS = SESSION_TIMEOUT_MINUTES * 60;
 
     int choice;
     while (true) {
+        auto currentTime = chrono::steady_clock::now();
+        long long elapsedSeconds = chrono::duration_cast<chrono::seconds>(currentTime - loginTime).count();
+        
+        if (elapsedSeconds >= TIMEOUT_SECONDS) {
+            cout << "\n*** SESJA WYGASŁA ***\n";
+            return;
+        }
+        
+        long long remainingSeconds = TIMEOUT_SECONDS - elapsedSeconds;
         cout << "\n--- Jesteś zalogowany jako: " << cardNumber << " ---\n";
+        cout << "--- Pozostały czas sesji: " << remainingSeconds / 60 << ":" << (remainingSeconds % 60 < 10 ? "0" : "") << (remainingSeconds % 60) << " ---\n";
         cout << "1. Sprawdź saldo\n";
         cout << "2. Wpłata\n";
         cout << "3. Wypłata\n";

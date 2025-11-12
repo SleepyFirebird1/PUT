@@ -213,3 +213,14 @@ Stan po operacji:
 100 2
 50 10
 
+=== 2025-11-12 17:24:46 ===
+Operacja: WYPŁATA
+Kwota: 500 PLN
+Pobrano:
+500 1
+Stan po operacji:
+500 0
+200 4
+100 2
+50 10
+
