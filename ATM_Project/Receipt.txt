@@ -1,0 +1,5 @@
+=== 2025-11-12 18:10:40 ===
+Konto: 1234
+Operacja: WPŁATA
+Kwota: 10000 PLN
+
