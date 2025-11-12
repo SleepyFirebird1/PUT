@@ -207,6 +207,23 @@ public:
 
     return remaining == 0;
     }
+    bool printReceipt(const string &filePath, const string &operation, long long totalAmount,string accountId) {
+        if (!ensureParentDir(filePath)) return false;
+        ofstream out(filePath, ios::trunc);
+        if (!out.is_open()) return false;
+
+        time_t t = time(nullptr);
+        char buf[64];
+        strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", localtime(&t));
+
+        out << "=== " << buf << " ===\n";
+        out << "Konto: " << accountId << '\n';
+        out << "Operacja: " << operation << '\n';
+        out << "Kwota: " << totalAmount << " PLN\n";
+        out << '\n';
+        out.close();
+        return true;
+    }
 private:
     bool appendLog(const string &logPath, const string &operation, const vector<long long> &changed, long long totalAmount) {
         if (!ensureParentDir(logPath)) return false;

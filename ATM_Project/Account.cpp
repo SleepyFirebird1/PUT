@@ -8,6 +8,7 @@ using namespace std;
 
 const string dbPath = "DataBase/CashStorage.txt";
 const string logPath = "DataBase/CashStorage_log.txt";
+const string receiptPath = "Receipt.txt";
 const string bankdbPath = "DataBase/BankDatabase.json";
 
 
@@ -67,7 +68,7 @@ void showLoggedInMenu(string cardNumber) {
     BankDatabaseHandler dbHandler;
     
     auto loginTime = chrono::steady_clock::now();
-    const int SESSION_TIMEOUT_MINUTES = 1;
+    const int SESSION_TIMEOUT_MINUTES = 10;
     const long long TIMEOUT_SECONDS = SESSION_TIMEOUT_MINUTES * 60;
 
     int choice;
@@ -121,6 +122,13 @@ void showLoggedInMenu(string cardNumber) {
             }
             
             if (transaction.deposit(cardNumber, amount, number)) {
+                cout << "Czy wydrukować potwierdzenie? (T): ";
+                string printReceipt;
+                cin >> printReceipt;
+                if (printReceipt == "T" || printReceipt == "t") {
+                        transaction.printReceipt(receiptPath, "WPŁATA", amount,cardNumber);
+                        cout << "Wydrukowano potwierdzenie wpłaty.\n";
+                    }
                 cout << "Operacja wpłaty zakończyła się pomyślnie.\n";
             } else {
                 cout << "Operacja wpłaty nie powiodła się.\n";
@@ -133,6 +141,13 @@ void showLoggedInMenu(string cardNumber) {
                 cerr << "Niepoprawna kwota.\n"; continue;
             }        
             if (transaction.withdrawal(cardNumber, amount)) {
+                cout << "Czy wydrukować potwierdzenie? (T): ";
+                string printReceipt;
+                cin >> printReceipt;
+                if (printReceipt == "T" || printReceipt == "t") {
+                        transaction.printReceipt(receiptPath, "WYPŁATA", amount,cardNumber);
+                        cout << "Wydrukowano potwierdzenie wpłaty.\n";
+                    }
                 cout << "Operacja wypłaty zakończyła się pomyślnie.\n";
             } else {
                 cout << "Operacja wypłaty nie powiodła się.\n";
