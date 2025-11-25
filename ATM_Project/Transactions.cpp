@@ -62,6 +62,7 @@ public:
 //sprawdzenie balansu
 
 };
+/*
 int main(){
     Transaction transaction;
 
@@ -132,3 +133,4 @@ int main(){
     }
     return 0;
 }
+    */

@@ -193,7 +193,7 @@ void showLoggedInMenu(string cardNumber) {
 }
 
 
-int main() {
+/*int main() {
     BankDatabaseHandler dbHandler;
     int choice;
 
@@ -278,3 +278,4 @@ int main() {
 
     return 0;
 }
+    */
