@@ -46,7 +46,7 @@ public:
     int unit = smallest; // 50
     int m = denominations.size();
     vector<int> denomUnits(m);
-    for (size_t i = 0; i < m; ++i) denomUnits[i] = denominations[i] / unit;
+    for (size_t i = 0; i < (size_t)m; ++i) denomUnits[i] = denominations[i] / unit;
 
     int amountUnits = static_cast<int>(amount / unit);
     int num = static_cast<int>(number);
