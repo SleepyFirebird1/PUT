@@ -3,6 +3,7 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QGridLayout>
+#include <QFormLayout>
 #include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
@@ -11,43 +12,53 @@
 #include <QInputDialog>
 #include <QFrame>
 #include <QDebug>
+#include <QRegularExpressionValidator>
 
-// Dołączamy Twoją logikę.
-// UWAGA: Upewnij się, że w Account.cpp zakomentowałeś funkcję main()!
+
 #include "Account.cpp"
 
-// --- STYLE CSS (Zaktualizowane) ---
-// Używamy selektora [class="nazwa"], ponieważ w C++ Qt nie ma natywnej obsługi klas CSS jak w HTML
+// --- STYLE CSS ---
 const QString STYLESHEET = R"(
     QWidget#MainWindow {
-        background-color: #003366; /* Ciemnoniebieskie tło obudowy */
+        background-color: #003366; 
     }
     
-    /* Stylizacja bocznych przycisków "sprzętowych" */
+    /* Przyciski boczne */
     QPushButton[class="sideButton"] {
-        background-color: #3c3c3c; /* Ciemnoszare przyciski */
+        background-color: #3c3c3c;
         color: white;
         border: 2px solid #1a1a1a;
         border-radius: 5px;
         font-weight: bold;
         font-size: 14px;
         min-height: 60px;
-        min-width: 120px;
+        min-width: 140px; /* Szersze przyciski */
         margin: 5px;
+        text-align: center;
     }
     QPushButton[class="sideButton"]:hover { background-color: #555555; }
     QPushButton[class="sideButton"]:pressed { background-color: #2a2a2a; }
-    QPushButton[class="sideButton"]:disabled { color: #777777; background-color: #333333; }
+    QPushButton[class="sideButton"]:disabled { color: #777777; background-color: #222222; border-color: #222222; }
 
-    /* Stylizacja "Ekranu" */
+    /* Ekran */
     QFrame#ScreenFrame {
-        background-color: #004a99; /* Jaśniejszy niebieski ekran */
-        border: 4px solid #002244; /* Ciemna ramka wokół ekranu */
+        background-color: #004a99;
+        border: 4px solid #002244;
         border-radius: 8px;
     }
-    QLabel { color: white; }
+    QLabel { color: black; font-family: 'Roboto Mono', monospace; }
+    
+    /* Pola tekstowe na ekranie */
+    QLineEdit {
+        font-size: 18px; 
+        padding: 5px; 
+        background-color: white; 
+        color: black;
+        border: 2px solid #002244;
+        border-radius: 4px;
+    }
 
-    /* Stylizacja klawiatury numerycznej */
+    /* Klawiatura PIN */
     QPushButton[class="numpadBtn"] {
         background-color: #e6e6e6;
         color: black;
@@ -62,8 +73,8 @@ const QString STYLESHEET = R"(
         border: 2px inset #aaaaaa;
         background-color: #d4d4d4;
     }
-    QPushButton#enterBtn { background-color: #4CAF50; color: white; } /* Zielony Enter */
-    QPushButton#clearBtn { background-color: #f44336; color: white; } /* Czerwony Clear */
+    QPushButton#enterBtn { background-color: #4CAF50; color: white; }
+    QPushButton#clearBtn { background-color: #f44336; color: white; }
 
     QLineEdit#pinDisplay {
         background-color: #003366;
@@ -79,27 +90,32 @@ class BankWindow : public QWidget {
     Q_OBJECT
 
 private:
-    // Główne komponenty
+    // UI Components
     QStackedWidget *stackedWidget;
     QFrame *screenFrame;
 
-    // Boczne przyciski "sprzętowe"
+    // Hardware buttons
     QPushButton *btnL1, *btnL2, *btnL3, *btnL4;
     QPushButton *btnR1, *btnR2, *btnR3, *btnR4;
 
-    // Ekran logowania i klawiatura
+    // --- PAGE 0: Login ---
     QWidget *loginPage;
     QLineEdit *cardInput;
-    QLineEdit *pinDisplay; // Tylko do wyświetlania gwiazdek
-    QString currentPinBuffer; // Przechowuje wpisany PIN wewnętrznie
+    QLineEdit *pinDisplay;
+    QString currentPinBuffer;
 
-    // Ekran menu
+    // --- PAGE 1: Menu ---
     QWidget *menuPage;
     QLabel *welcomeLabel;
     QLabel *balanceLabel;
-    QLabel *menuInstructionsLabel;
 
-    // Logika biznesowa
+    // --- PAGE 2: Registration ---
+    QWidget *registerPage;
+    QLineEdit *regCardInput;
+    QLineEdit *regPinInput;
+    QLineEdit *regBalanceInput;
+
+    // Logic
     BankDatabaseHandler dbHandler;
     Transaction transaction;
     string currentCardNumber;
@@ -109,98 +125,113 @@ public:
         setObjectName("MainWindow");
         setStyleSheet(STYLESHEET);
 
-        // Inicjalizacja bazy danych
         if (!dbHandler.loadData("DataBase/BankDatabase.json")) {
-            QMessageBox::critical(this, "Błąd", "Nie można załadować bazy danych!\nUpewnij się, że folder DataBase istnieje.");
+            showMessage("Krytyczny błąd", "Nie można załadować bazy danych!");
         }
 
         setupHardwareLayout();
-        setupScreenContent();
         
-        // Na początku jesteśmy w trybie logowania
+        // Setup Screens
+        setupLoginPage();
+        setupMenuPage();
+        setupRegisterPage();
+
+        // Add pages to stack
+        stackedWidget->addWidget(loginPage);    // Index 0
+        stackedWidget->addWidget(menuPage);     // Index 1
+        stackedWidget->addWidget(registerPage); // Index 2
+        
+        // Start state
         stackedWidget->setCurrentIndex(0);
-        updateSideButtonsState(false); // Wyłącz przyciski menu
+        updateSideButtonsState(0); 
     }
 
-    // Tworzy "fizyczną" obudowę bankomatu (przyciski boczne i ramkę ekranu)
     void setupHardwareLayout() {
         QHBoxLayout *mainHLayout = new QHBoxLayout(this);
         mainHLayout->setSpacing(15);
         mainHLayout->setContentsMargins(20, 20, 20, 20);
 
-        // --- Lewa kolumna przycisków ---
+        // Left Buttons
         QVBoxLayout *leftBtnLayout = new QVBoxLayout();
-        btnL1 = createSideButton("Wpłata");
-        btnL2 = createSideButton("Wypłata");
-        btnL3 = createSideButton("---"); // Nieużywany
-        btnL4 = createSideButton("---"); // Nieużywany
-        leftBtnLayout->addWidget(btnL1);
-        leftBtnLayout->addWidget(btnL2);
-        leftBtnLayout->addWidget(btnL3);
-        leftBtnLayout->addWidget(btnL4);
+        btnL1 = createSideButton("---");
+        btnL2 = createSideButton("---");
+        btnL3 = createSideButton("---");
+        btnL4 = createSideButton("---");
+        leftBtnLayout->addWidget(btnL1); leftBtnLayout->addWidget(btnL2);
+        leftBtnLayout->addWidget(btnL3); leftBtnLayout->addWidget(btnL4);
         leftBtnLayout->addStretch();
 
-        // --- Środkowy Ekran ---
+        // Screen
         screenFrame = new QFrame();
         screenFrame->setObjectName("ScreenFrame");
-        screenFrame->setMinimumSize(500, 600);
+        screenFrame->setMinimumSize(500, 650);
         QVBoxLayout *screenLayout = new QVBoxLayout(screenFrame);
         stackedWidget = new QStackedWidget(screenFrame);
         screenLayout->addWidget(stackedWidget);
 
-        // --- Prawa kolumna przycisków ---
+        // Right Buttons
         QVBoxLayout *rightBtnLayout = new QVBoxLayout();
-        btnR1 = createSideButton("Odśwież");
-        btnR2 = createSideButton("Zarejestruj"); // Widoczny przy logowaniu
+        btnR1 = createSideButton("---");
+        btnR2 = createSideButton("---");
         btnR3 = createSideButton("---");
-        btnR4 = createSideButton("Wyloguj");
-        rightBtnLayout->addWidget(btnR1);
-        rightBtnLayout->addWidget(btnR2);
-        rightBtnLayout->addWidget(btnR3);
-        rightBtnLayout->addStretch();
+        btnR4 = createSideButton("---");
+        rightBtnLayout->addWidget(btnR1); rightBtnLayout->addWidget(btnR2);
+        rightBtnLayout->addWidget(btnR3); rightBtnLayout->addStretch(); 
         rightBtnLayout->addWidget(btnR4);
 
-        // Złożenie całości
         mainHLayout->addLayout(leftBtnLayout);
         mainHLayout->addWidget(screenFrame);
         mainHLayout->addLayout(rightBtnLayout);
 
-        setWindowTitle("Symulator Bankomatu");
+        setWindowTitle("System Bankowy ATM");
+
+        // Global Button Connections (Context dependent)
+        connect(btnL1, &QPushButton::clicked, this, [this](){
+            if(stackedWidget->currentIndex() == 1) handleDeposit();
+        });
+        connect(btnL2, &QPushButton::clicked, this, [this](){
+            if(stackedWidget->currentIndex() == 1) handleWithdraw();
+        });
         
-        // Podłączenie bocznych przycisków do akcji
-        connect(btnL1, &QPushButton::clicked, this, &BankWindow::handleDeposit);
-        connect(btnL2, &QPushButton::clicked, this, &BankWindow::handleWithdraw);
-        connect(btnR1, &QPushButton::clicked, this, &BankWindow::updateBalance);
-        connect(btnR2, &QPushButton::clicked, this, &BankWindow::handleRegister);
-        connect(btnR4, &QPushButton::clicked, this, &BankWindow::handleLogout);
+        connect(btnR1, &QPushButton::clicked, this, [this](){
+            if(stackedWidget->currentIndex() == 1) updateBalance();
+            if(stackedWidget->currentIndex() == 2) handleRegisterSubmit(); // Zatwierdź rejestrację
+        });
+        
+        connect(btnR2, &QPushButton::clicked, this, [this](){
+            if(stackedWidget->currentIndex() == 0) switchToRegister(); // Idź do rejestracji
+        });
+
+        connect(btnR3, &QPushButton::clicked, this, [this](){
+             if(stackedWidget->currentIndex() == 1) handleBlockCard(); // Zablokuj
+        });
+
+        connect(btnR4, &QPushButton::clicked, this, [this](){
+            if(stackedWidget->currentIndex() == 1) handleLogout();
+            if(stackedWidget->currentIndex() == 2) handleLogout(); // Anuluj rejestrację
+        });
     }
 
-    // Tworzy zawartość wyświetlaną na "ekranie"
-    void setupScreenContent() {
-        // --- Ekran 1: Logowanie z klawiaturą ---
+    void setupLoginPage() {
         loginPage = new QWidget();
-        QVBoxLayout *loginLayout = new QVBoxLayout(loginPage);
-        loginLayout->setAlignment(Qt::AlignCenter);
+        QVBoxLayout *layout = new QVBoxLayout(loginPage);
+        layout->setAlignment(Qt::AlignCenter);
 
         QLabel *logo = new QLabel("WITAJ W BANKU");
-        logo->setStyleSheet("font-size: 28px; font-weight: bold; color: yellow; margin-bottom: 30px;");
+        logo->setStyleSheet("font-size: 28px; font-weight: bold; color: #FFD700; margin-bottom: 20px;");
         logo->setAlignment(Qt::AlignCenter);
 
-        QLabel *infoLbl = new QLabel("Wpisz numer karty (klawiatura PC) i PIN (ekran):");
-        infoLbl->setAlignment(Qt::AlignCenter);
-
         cardInput = new QLineEdit();
-        cardInput->setPlaceholderText("Numer karty...");
-        cardInput->setStyleSheet("font-size: 18px; padding: 5px; background-color: white; color: black;");
-
+        cardInput->setPlaceholderText("Numer karty (użyj klawiatury)...");
+        
         pinDisplay = new QLineEdit();
         pinDisplay->setObjectName("pinDisplay");
-        pinDisplay->setPlaceholderText("PIN");
-        pinDisplay->setReadOnly(true); // Tylko do odczytu, wpisywanie przez klawiaturę ekranową
+        pinDisplay->setPlaceholderText("----");
+        pinDisplay->setReadOnly(true);
         pinDisplay->setEchoMode(QLineEdit::Password);
         pinDisplay->setAlignment(Qt::AlignCenter);
 
-        // Klawiatura numeryczna
+        // Numpad
         QGridLayout *numpadLayout = new QGridLayout();
         numpadLayout->setSpacing(10);
         int values[3][3] = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
@@ -208,158 +239,215 @@ public:
             for (int c = 0; c < 3; ++c) {
                 QPushButton *btn = new QPushButton(QString::number(values[r][c]));
                 btn->setProperty("digit", values[r][c]);
-                // POPRAWKA: Używamy setProperty zamiast addClassName
                 btn->setProperty("class", "numpadBtn");
                 connect(btn, &QPushButton::clicked, this, &BankWindow::digitClicked);
                 numpadLayout->addWidget(btn, r, c);
             }
         }
-        // Ostatni rząd: Clear, 0, Enter
         QPushButton *clearBtn = new QPushButton("C");
-        clearBtn->setObjectName("clearBtn"); 
-        // POPRAWKA
-        clearBtn->setProperty("class", "numpadBtn");
+        clearBtn->setObjectName("clearBtn"); clearBtn->setProperty("class", "numpadBtn");
         connect(clearBtn, &QPushButton::clicked, this, &BankWindow::clearPin);
 
         QPushButton *zeroBtn = new QPushButton("0");
-        zeroBtn->setProperty("digit", 0); 
-        // POPRAWKA
-        zeroBtn->setProperty("class", "numpadBtn");
+        zeroBtn->setProperty("digit", 0); zeroBtn->setProperty("class", "numpadBtn");
         connect(zeroBtn, &QPushButton::clicked, this, &BankWindow::digitClicked);
 
         QPushButton *enterBtn = new QPushButton("OK");
-        enterBtn->setObjectName("enterBtn"); 
-        // POPRAWKA
-        enterBtn->setProperty("class", "numpadBtn");
+        enterBtn->setObjectName("enterBtn"); enterBtn->setProperty("class", "numpadBtn");
         connect(enterBtn, &QPushButton::clicked, this, &BankWindow::handleLoginAction);
 
         numpadLayout->addWidget(clearBtn, 3, 0);
         numpadLayout->addWidget(zeroBtn, 3, 1);
         numpadLayout->addWidget(enterBtn, 3, 2);
 
-        QWidget *numpadContainer = new QWidget();
-        numpadContainer->setLayout(numpadLayout);
-        numpadContainer->setMaximumWidth(300);
+        QWidget *padWidget = new QWidget();
+        padWidget->setLayout(numpadLayout);
+        padWidget->setMaximumWidth(320);
 
-        loginLayout->addWidget(logo);
-        loginLayout->addWidget(infoLbl);
-        loginLayout->addWidget(cardInput);
-        loginLayout->addWidget(pinDisplay);
-        loginLayout->addWidget(numpadContainer);
-        loginLayout->setAlignment(numpadContainer, Qt::AlignCenter);
+        layout->addWidget(logo);
+        layout->addWidget(new QLabel("Wprowadź kartę:"));
+        layout->addWidget(cardInput);
+        layout->addWidget(new QLabel("Wprowadź PIN (na ekranie):"));
+        layout->addWidget(pinDisplay);
+        layout->addSpacing(10);
+        layout->addWidget(padWidget);
+        layout->setAlignment(padWidget, Qt::AlignCenter);
+    }
 
-
-        // --- Ekran 2: Menu Główne ---
+    void setupMenuPage() {
         menuPage = new QWidget();
-        QVBoxLayout *menuLayout = new QVBoxLayout(menuPage);
-        menuLayout->setAlignment(Qt::AlignCenter);
+        QVBoxLayout *layout = new QVBoxLayout(menuPage);
+        layout->setAlignment(Qt::AlignCenter);
 
         welcomeLabel = new QLabel("Witaj!");
-        welcomeLabel->setStyleSheet("font-size: 24px; font-weight: bold; color: white; margin-top: 20px;");
+        welcomeLabel->setStyleSheet("font-size: 22px; font-weight: bold; margin-top: 20px;");
         welcomeLabel->setAlignment(Qt::AlignCenter);
 
         balanceLabel = new QLabel("SALDO: --- PLN");
-        balanceLabel->setStyleSheet("font-size: 32px; font-weight: bold; color: #4CAF50; margin: 40px 0;");
+        balanceLabel->setStyleSheet("font-size: 34px; font-weight: bold; color: #4CAF50; margin: 30px 0;");
         balanceLabel->setAlignment(Qt::AlignCenter);
         
-        menuInstructionsLabel = new QLabel("Użyj przycisków po bokach ekranu\naby wybrać operację.");
-        menuInstructionsLabel->setStyleSheet("font-size: 16px; color: #cccccc; font-style: italic;");
-        menuInstructionsLabel->setAlignment(Qt::AlignCenter);
+        QLabel *instr = new QLabel("Wybierz operację korzystając z przycisków\npo bokach ekranu.");
+        instr->setStyleSheet("font-size: 14px; color: black; font-style: italic;");
+        instr->setAlignment(Qt::AlignCenter);
 
-        menuLayout->addStretch();
-        menuLayout->addWidget(welcomeLabel);
-        menuLayout->addWidget(balanceLabel);
-        menuLayout->addWidget(menuInstructionsLabel);
-        menuLayout->addStretch();
-
-        stackedWidget->addWidget(loginPage);
-        stackedWidget->addWidget(menuPage);
+        layout->addStretch();
+        layout->addWidget(welcomeLabel);
+        layout->addWidget(balanceLabel);
+        layout->addWidget(instr);
+        layout->addStretch();
     }
 
-    // Helper do tworzenia bocznych przycisków
+    void setupRegisterPage() {
+        registerPage = new QWidget();
+        QVBoxLayout *mainLayout = new QVBoxLayout(registerPage);
+        mainLayout->setAlignment(Qt::AlignCenter);
+
+        QLabel *title = new QLabel("REJESTRACJA NOWEGO KONTA");
+        title->setStyleSheet("font-size: 20px; font-weight: bold; color: #FFD700; margin-bottom: 20px;");
+        title->setAlignment(Qt::AlignCenter);
+
+        QFormLayout *formLayout = new QFormLayout();
+        formLayout->setLabelAlignment(Qt::AlignRight);
+        
+        regCardInput = new QLineEdit();
+        regCardInput->setPlaceholderText("Nowy numer karty");
+        
+        regPinInput = new QLineEdit();
+        regPinInput->setPlaceholderText("4 cyfry");
+        regPinInput->setMaxLength(4);
+        
+        regBalanceInput = new QLineEdit();
+        regBalanceInput->setPlaceholderText("np. 1000");
+        regBalanceInput->setValidator(new QRegularExpressionValidator(QRegularExpression("[0-9]*"), this));
+
+        // Stylowanie etykiet formularza
+        QLabel *l1 = new QLabel("Numer Karty:"); l1->setStyleSheet("font-size: 16px; font-weight: bold;");
+        QLabel *l2 = new QLabel("Nowy PIN:"); l2->setStyleSheet("font-size: 16px; font-weight: bold;");
+        QLabel *l3 = new QLabel("Saldo Startowe:"); l3->setStyleSheet("font-size: 16px; font-weight: bold;");
+
+        formLayout->addRow(l1, regCardInput);
+        formLayout->addRow(l2, regPinInput);
+        formLayout->addRow(l3, regBalanceInput);
+
+        QWidget *formContainer = new QWidget();
+        formContainer->setLayout(formLayout);
+        formContainer->setStyleSheet("background-color: #003366; padding: 10px; border-radius: 5px;");
+
+        mainLayout->addWidget(title);
+        mainLayout->addWidget(formContainer);
+        mainLayout->addSpacing(20);
+        
+        QLabel *info = new QLabel("Naciśnij 'Zatwierdź' (Prawy Górny)\nlub 'Anuluj' (Prawy Dolny)");
+        info->setAlignment(Qt::AlignCenter);
+        mainLayout->addWidget(info);
+        mainLayout->addStretch();
+    }
+
     QPushButton* createSideButton(const QString &text) {
         QPushButton *btn = new QPushButton(text);
-        // POPRAWKA
         btn->setProperty("class", "sideButton");
         return btn;
     }
 
-    // Zmienia stan przycisków w zależności od tego, czy jesteśmy zalogowani
-    void updateSideButtonsState(bool loggedIn) {
-        btnL1->setEnabled(loggedIn); // Wpłata
-        btnL2->setEnabled(loggedIn); // Wypłata
-        btnL3->setEnabled(false);
-        btnL4->setEnabled(false);
+    // --- LOGIC ---
 
-        btnR1->setEnabled(loggedIn); // Odśwież
-        btnR2->setEnabled(!loggedIn); // Rejestracja (tylko gdy wylogowany)
-        btnR3->setEnabled(false);
-        btnR4->setEnabled(loggedIn); // Wyloguj
+    // 0 = Login, 1 = Menu, 2 = Register
+    void updateSideButtonsState(int pageIndex) {
+        // Reset tekstów
+        btnL1->setText("---"); btnL2->setText("---"); btnL3->setText("---"); btnL4->setText("---");
+        btnR1->setText("---"); btnR2->setText("---"); btnR3->setText("---"); btnR4->setText("---");
         
-        if(loggedIn) {
-             btnR2->setText("---");
-             btnL1->setText("Wpłata >");
-             btnL2->setText("Wypłata >");
-        } else {
-             btnR2->setText("< Zarejestruj");
-             btnL1->setText("---");
-             btnL2->setText("---");
+        // Reset aktywności
+        btnL1->setEnabled(false); btnL2->setEnabled(false); btnL3->setEnabled(false); btnL4->setEnabled(false);
+        btnR1->setEnabled(false); btnR2->setEnabled(false); btnR3->setEnabled(false); btnR4->setEnabled(false);
+
+        if (pageIndex == 0) { // Login
+            btnR2->setText("< Załóż Konto");
+            btnR2->setEnabled(true);
+        }
+        else if (pageIndex == 1) { // Menu
+            btnL1->setText("Wpłata >"); btnL1->setEnabled(true);
+            btnL2->setText("Wypłata >"); btnL2->setEnabled(true);
+            
+            btnR1->setText("< Odśwież"); btnR1->setEnabled(true);
+            btnR3->setText("< ZABLOKUJ"); btnR3->setStyleSheet("color: red; border-color: red;"); btnR3->setEnabled(true);
+            btnR4->setText("< Wyloguj"); btnR4->setEnabled(true);
+        }
+        else if (pageIndex == 2) { // Register
+            btnR1->setText("< Zatwierdź"); btnR1->setEnabled(true);
+            btnR4->setText("< Anuluj"); btnR4->setEnabled(true);
         }
     }
 
+    void showMessage(QString title, QString content, bool isError = true) {
+        QMessageBox msg;
+        msg.setWindowTitle(title);
+        msg.setText(content);
+        msg.setIcon(isError ? QMessageBox::Warning : QMessageBox::Information);
+        msg.setStyleSheet("background-color: white; color: black;");
+        msg.exec();
+    }
 
 private slots:
-    // Slot dla klawiatury numerycznej
+    // --- PIN PAD ---
     void digitClicked() {
         QPushButton *btn = qobject_cast<QPushButton*>(sender());
         if (btn && currentPinBuffer.length() < 4) {
             int digit = btn->property("digit").toInt();
             currentPinBuffer.append(QString::number(digit));
-            pinDisplay->setText(currentPinBuffer); // Pokaże gwiazdki dzięki EchoMode::Password
+            pinDisplay->setText(currentPinBuffer);
         }
     }
-
     void clearPin() {
         currentPinBuffer.clear();
         pinDisplay->clear();
     }
 
+    // --- ACTIONS ---
     void handleLoginAction() {
         string card = cardInput->text().toStdString();
-        string pin = currentPinBuffer.toStdString(); // Używamy bufora z klawiatury
+        string pin = currentPinBuffer.toStdString();
 
-        if (card.empty() || pin.length() != 4) {
-            QMessageBox::warning(this, "Błąd", "Wprowadź numer karty i 4-cyfrowy PIN.");
-            return;
+        if (card.empty()) {
+            showMessage("Błąd", "Wprowadź numer karty."); return;
+        }
+        if (pin.length() != 4) {
+            showMessage("Błąd", "PIN musi mieć 4 cyfry."); return;
         }
 
         int result = dbHandler.checkPin(card, pin);
 
         if (result == 1) {
             currentCardNumber = card;
-            welcomeLabel->setText(QString::fromStdString("Witaj, konto: " + card));
+            welcomeLabel->setText(QString::fromStdString("Konto: " + card));
             updateBalance();
             
-            // Wyczyść pola po udanym logowaniu
             cardInput->clear();
             clearPin();
             
-            stackedWidget->setCurrentIndex(1); // Przejdź do menu
-            updateSideButtonsState(true); // Aktywuj przyciski menu
+            stackedWidget->setCurrentIndex(1);
+            updateSideButtonsState(1);
         } else if (result == 0) {
-            QMessageBox::warning(this, "Błąd", "Niepoprawny PIN.");
+            showMessage("Błąd", "Niepoprawny PIN!", true);
             clearPin();
         } else if (result == -1) {
-            QMessageBox::warning(this, "Błąd", "Konto nie istnieje.");
+            showMessage("Błąd", "Nie znaleziono konta.", true);
         } else if (result == -2) {
-            QMessageBox::warning(this, "Blokada", "Konto jest zablokowane.");
+            showMessage("Blokada", "KARTA ZABLOKOWANA.\nSkontaktuj się z bankiem.", true);
         }
     }
 
     void handleLogout() {
         currentCardNumber = "";
-        stackedWidget->setCurrentIndex(0); // Wróć do logowania
-        updateSideButtonsState(false);
+        stackedWidget->setCurrentIndex(0);
+        updateSideButtonsState(0);
+        
+        // Wyczyść formularz rejestracji przy wyjściu
+        regCardInput->clear();
+        regPinInput->clear();
+        regBalanceInput->clear();
+        btnR3->setStyleSheet(""); // Reset stylu przycisku blokady
     }
 
     void updateBalance() {
@@ -368,65 +456,140 @@ private slots:
         balanceLabel->setText("SALDO: " + QString::number(balance) + " PLN");
     }
 
-    // --- Akcje transakcyjne (używają QInputDialog dla uproszczenia) ---
-    void handleWithdraw() {
-        bool ok;
-        // Używamy "double" żeby pozwolić na większe liczby, ale rzutujemy na int
-        double amountD = QInputDialog::getDouble(this, "Wypłata", "Podaj kwotę do wypłaty (wielokrotność 50 PLN):", 0, 0, 100000, 0, &ok);
-        int amount = static_cast<int>(amountD);
+    void switchToRegister() {
+        stackedWidget->setCurrentIndex(2);
+        updateSideButtonsState(2);
+    }
 
-        if (ok && amount > 0) {
-             if (amount % 50 != 0) {
-                  QMessageBox::warning(this, "Błąd", "Kwota musi być wielokrotnością 50 PLN.");
-                  return;
-             }
-            if (transaction.withdrawal(currentCardNumber, amount)) {
-                QMessageBox::information(this, "Sukces", "Wypłacono środki.\nOdbierz gotówkę.");
-                updateBalance();
+    void handleRegisterSubmit() {
+        string newCard = regCardInput->text().toStdString();
+        string newPin = regPinInput->text().toStdString();
+        string balStr = regBalanceInput->text().toStdString();
+
+        if (newCard.empty()) {
+            showMessage("Błąd", "Podaj numer karty."); return;
+        }
+        if (newPin.length() != 4) {
+            showMessage("Błąd", "PIN musi składać się z 4 cyfr."); return;
+        }
+        
+        long long initialBalance = 0;
+        try {
+            if (!balStr.empty()) initialBalance = stoll(balStr);
+        } catch (...) {
+            showMessage("Błąd", "Niepoprawny format salda."); return;
+        }
+
+        if (dbHandler.existenceOfAccount(newCard)) {
+            showMessage("Błąd", "Konto o tym numerze już istnieje!");
+            return;
+        }
+
+        // Dodanie do bazy
+        dbHandler.addData(newCard, newCard, newPin, initialBalance);
+        if (dbHandler.saveData("DataBase/BankDatabase.json")) {
+            showMessage("Sukces", "Konto utworzone pomyślnie.\nMożesz się zalogować.", false);
+            handleLogout(); // Wróć do logowania
+        } else {
+            showMessage("Błąd", "Błąd zapisu bazy danych.");
+        }
+    }
+
+    void handleBlockCard() {
+        QMessageBox msg;
+        msg.setWindowTitle("Blokada Karty");
+        msg.setText("Czy na pewno chcesz ZABLOKOWAĆ tę kartę?\nOperacja jest nieodwracalna w bankomacie.");
+        msg.setIcon(QMessageBox::Critical);
+        msg.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+        msg.setStyleSheet("background-color: white; color: black;"); // Fix dla ciemnego motywu
+        
+        if (msg.exec() == QMessageBox::Yes) {
+            // Ponowne załadowanie dla pewności
+            dbHandler.loadData("DataBase/BankDatabase.json");
+            
+            if (dbHandler.changeBlockStatus(currentCardNumber, true) && 
+                dbHandler.saveData("DataBase/BankDatabase.json")) {
+                
+                showMessage("Zablokowano", "Karta została zablokowana.\nNastąpi wylogowanie.", false);
+                handleLogout();
             } else {
-                QMessageBox::warning(this, "Błąd", "Nie udało się wypłacić środków.\nSprawdź saldo lub dostępność banknotów w maszynie.");
+                showMessage("Błąd", "Nie udało się zablokować karty.");
             }
         }
     }
 
-    void handleDeposit() {
-        bool okAmount;
-        double amountD = QInputDialog::getDouble(this, "Wpłata", "Podaj łączną kwotę wpłaty:", 0, 0, 100000, 0, &okAmount);
+    // --- ZAKTUALIZOWANA OBSŁUGA WYPŁATY ---
+    void handleWithdraw() {
+        bool ok;
+        double amountD = QInputDialog::getDouble(this, "Wypłata", "Podaj kwotę do wypłaty (wielokrotność 50 PLN):", 0, 0, 100000, 0, &ok);
+        
+        if (!ok) return; // Użytkownik kliknął Anuluj
+
         int amount = static_cast<int>(amountD);
-        if (!okAmount || amount <= 0) return;
 
-        bool okNotes;
-        int notes = QInputDialog::getInt(this, "Wpłata", "Podaj liczbę wkładanych banknotów (sztuki):", 1, 1, 200, 1, &okNotes);
-        if (!okNotes) return;
+        // 1. Walidacja kwoty
+        if (amount <= 0) {
+            showMessage("Błąd", "Kwota musi być większa od zera."); 
+            return;
+        }
+        if (amount % 50 != 0) {
+             showMessage("Błąd", "Bankomat wydaje tylko banknoty o nominałach: 50, 100, 200, 500 PLN.\nKwota musi być podzielna przez 50."); 
+             return;
+        }
 
-        QMessageBox::information(this, "Symulacja", "Trwa przeliczanie banknotów...");
+        // 2. Sprawdzenie salda PRZED próbą wypłaty
+        long long currentBalance = transaction.getBalance(currentCardNumber);
+        if (amount > currentBalance) {
+            showMessage("Odmowa", "Brak wystarczających środków na koncie.\nSprawdź swoje saldo.");
+            return;
+        }
 
-        if (transaction.deposit(currentCardNumber, amount, notes)) {
-             QMessageBox::information(this, "Sukces", "Wpłacono środki na konto.");
-             updateBalance();
+        // 3. Próba realizacji w backendzie
+        if (transaction.withdrawal(currentCardNumber, amount)) {
+            QString successMsg = QString("Operacja udana.\nWypłacono: %1 PLN.\nProszę odebrać gotówkę.").arg(amount);
+            showMessage("Sukces", successMsg, false);
+            updateBalance();
         } else {
-             QMessageBox::warning(this, "Błąd", "Wpłata odrzucona.\nKwota nie zgadza się z zadeklarowanymi nominałami lub przekroczono limity.");
+            showMessage("Błąd techniczny", "Nie udało się wypłacić środków.\nBankomat może nie posiadać odpowiednich nominałów do wydania tej kwoty.");
         }
     }
-    
-    void handleRegister() {
-        QString newCard = QInputDialog::getText(this, "Rejestracja", "Podaj nowy numer karty:");
-        if (newCard.isEmpty()) return;
+
+    // --- ZAKTUALIZOWANA OBSŁUGA WPŁATY ---
+    void handleDeposit() {
+        bool okAmount;
+        double amountD = QInputDialog::getDouble(this, "Wpłata", "Podaj łączną kwotę wpłaty (max 100 000):", 0, 0, 100000, 0, &okAmount);
         
-        if (dbHandler.existenceOfAccount(newCard.toStdString())) {
-             QMessageBox::warning(this, "Błąd", "Konto o tym numerze już istnieje.");
+        if (!okAmount) return; // Anuluj
+
+        int amount = static_cast<int>(amountD);
+        if (amount <= 0) {
+             showMessage("Błąd", "Kwota wpłaty musi być dodatnia.");
              return;
         }
-        
-        QString newPin = QInputDialog::getText(this, "Rejestracja", "Ustaw 4-cyfrowy PIN:");
-        if (newPin.length() != 4) {
-             QMessageBox::warning(this, "Błąd", "PIN musi mieć dokładnie 4 cyfry.");
+        if (amount % 10 != 0) { 
+             showMessage("Błąd", "Nieprawidłowa kwota. Wpłatomat przyjmuje tylko pełne banknoty.");
              return;
         }
 
-        dbHandler.addData(newCard.toStdString(), newCard.toStdString(), newPin.toStdString(), 0);
-        dbHandler.saveData("DataBase/BankDatabase.json");
-        QMessageBox::information(this, "Sukces", "Konto utworzone pomyślnie.\nMożesz się teraz zalogować.");
+        bool okNotes;
+        int notes = QInputDialog::getInt(this, "Wpłata", "Podaj liczbę wkładanych banknotów (max 200 szt.):", 1, 1, 200, 1, &okNotes);
+        
+        if (!okNotes) return; // Anuluj
+
+        showMessage("Przetwarzanie", "Trwa przeliczanie i weryfikacja banknotów...", false);
+
+        if (transaction.deposit(currentCardNumber, amount, notes)) {
+             QString successMsg = QString("Wpłata zakończona sukcesem.\nZaksięgowano: %1 PLN.").arg(amount);
+             showMessage("Sukces", successMsg, false);
+             updateBalance();
+        } else {
+             showMessage("Odmowa wpłaty", 
+                 "Operacja odrzucona przez system.\n\n"
+                 "Możliwe przyczyny:\n"
+                 "1. Kwota nie zgadza się z zadeklarowanymi nominałami.\n"
+                 "2. Przekroczono limit banknotów (200 szt).\n"
+                 "3. Wprowadzono nieobsługiwane nominały.");
+        }
     }
 };
 
