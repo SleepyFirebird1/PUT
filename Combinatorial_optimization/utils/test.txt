@@ -1,0 +1,21 @@
+Greedy, 87
+Tabu: 1, 70
+Tabu: 2, 70
+Tabu: 3, 71
+Tabu: 4, 69
+Tabu: 5, 69
+Tabu: 6, 71
+Tabu: 7, 70
+Tabu: 8, 71
+Tabu: 9, 71
+Tabu: 10, 70
+Tabu: 11, 72
+Tabu: 12, 71
+Tabu: 13, 71
+Tabu: 14, 71
+Tabu: 15, 71
+Tabu: 16, 73
+Tabu: 17, 71
+Tabu: 18, 72
+Tabu: 19, 73
+Tabu: 20, 71
