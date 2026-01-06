@@ -36,7 +36,7 @@ def tabu_search(graph, t, max_lenght=10):
         tabu = []
         conflicts_list = conflicts(graph, temp_solution)
         while conflicts_list and time.time() - start_time < t:
-            if time.time() - last_improvement_time > 60:
+            if time.time() - last_improvement_time > 30:
                 break
             conflict_node = random.choice(conflicts_list)
             conflicts_for_each_color = [float("inf")] * (max_color + 1)
@@ -74,3 +74,10 @@ def tabu_search(graph, t, max_lenght=10):
             best_solution = list(temp_solution)
             last_improvement_time = time.time()
     return best_solution, max(best_solution)
+
+
+def run_tabu(args):
+    i, matrix, t, tabu_lenght = args
+    print(f"Algorithm starts {i}\n")
+    result, max_val = tabu_search(matrix, t, tabu_lenght)
+    return i, tabu_lenght, max_val
