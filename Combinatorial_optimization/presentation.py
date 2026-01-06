@@ -30,3 +30,4 @@ if __name__ == "__main__":
                 file.write("----------------------------\n")
                 file.write(f"Instance: {instance}\n")
                 file.write(f"Tabu: {tabu_lenght}, {tabu_search_max}\n")
+                file.write("----------------------------\n")
