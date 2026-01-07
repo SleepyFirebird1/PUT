@@ -2,85 +2,94 @@
 
 ```mermaid
 classDiagram
+    %% --- WARSTWA DANYCH I SPRZĘTU ---
     class CashStorage {
         #vector~int~ denominations
         #vector~long long~ quantities
-        +CashStorage()
-        +~CashStorage()
-        +loadFromFile(path: string) bool
-        +saveToFile(path: string) bool
-        +getDenominations() vector~int~
-        +getQuantities() vector~long long~
-        +addNotes(index: size_t, count: long long) void
-        +printStorage() void
-        #ensureParentDir(path: string) bool
-    }
-
-    class CashDispenser {
-        +CashDispenser()
-        +depositAmount(amount: long long, number: long long, dbPath: string, logPath: string) bool
-        +withdrawAmount(amount: long long, dbPath: string, logPath: string) bool
-        +canDispense(amount: long long) bool
-        +printReceipt(filePath: string, operation: string, totalAmount: long long, accountId: string) bool
-        -appendLog(logPath: string, operation: string, changed: vector~long long~, totalAmount: long long) bool
+        +loadFromFile(path)
+        +saveToFile(path)
+        +addNotes(index, count)
+        +printStorage()
     }
 
     class BankDatabaseHandler {
         +json db
-        +loadData(filename: string) bool
-        +saveData(filename: string) bool
-        +addData(accountId: string, cardNumber: string, pin: string, balance: long long) bool
-        +deleteData(cardNumber: string) bool
-        +getBalance(cardNumber: string) long long
-        +changeBalance(cardNumber: string, amount: long long) bool
-        +changePin(cardNumber: string, newPin: string) bool
-        +changeBlockStatus(cardNumber: string, shouldBeBlocked: bool) bool
-        +checkPin(cardNumber: string, pinCheck: string) int
-        +existenceOfAccount(cardNumber: string) bool
+        +loadData(filename)
+        +saveData(filename)
+        +addData(accountId, pin, balance)
+        +deleteData(cardNumber)
+        +getBalance(cardNumber)
+        +changeBalance(cardNumber, amount)
+        +changeBlockStatus(cardNumber, status)
+        +checkPin(cardNumber, pin)
     }
 
+    %% --- WARSTWA LOGIKI BIZNESOWEJ (CASH MACHINE) ---
+    class CashDispenser {
+        #IReceiptStrategy* receiptStrategy
+        +setReceiptStrategy(strategy)
+        +printReceipt(path, op, amount, id)
+        +depositAmount(amount, notes, paths...)
+        +withdrawAmount(amount, paths...)
+        +canDispense(amount)
+    }
+
+    %% --- WZORZEC STRATEGIA (Nowość) ---
+    class IReceiptStrategy {
+        <<interface>>
+        +generate(path, op, amount, id)*
+    }
+
+    class StandardReceipt {
+        +generate(...)
+    }
+
+    class PrivacyReceipt {
+        +generate(...)
+    }
+
+    %% --- WARSTWA TRANSAKCYJNA I SERWISOWA ---
     class Transaction {
-        +deposit(cardNumber: string, amount: long long, number: long long) bool
-        +canWithdrawal(amount: long long, cardNumber: string) bool
-        +withdrawal(cardNumber: string, amount: long long) bool
+        +deposit(card, amount, notes)
+        +withdrawal(card, amount)
+        +canWithdrawal(amount, card)
     }
 
     class Service {
-        +service_collect(amount: long long) bool
-        +service_deposit(amount: long long, number: long long) bool
-        +unblock_card(cardNumber: string) bool
+        +service_collect(amount)
+        +service_deposit(amount, notes)
+        +unblock_card(card)
     }
 
-    class AtmGui {
-        -QTextEdit* m_screen
-        -QLineEdit* m_inputLine
-        -State m_currentState
-        -QString m_inputBuffer
-        -QString m_currentCardNumber
-        -QString m_tempPin
-        -long long m_tempAmount
-        -Transaction m_transaction
-        -QTimer* m_sessionTimer
-        -const int SESSION_TIMEOUT_MS
-        +AtmGui(parent: QWidget*)
-        +~AtmGui()
-        -onNumpadClicked(number: int) void
-        -onConfirmClicked() void
-        -onClearClicked() void
-        -onCancelClicked() void
-        -onSessionTimeout() void
-        -initGui() void
-        -createKeypad() void
-        -setState(newState: State) void
-        -updateScreenText() void
-        -showTemporaryMessage(message: QString, nextState: State) void
-        -resetSessionTimer() void
+    %% --- WARSTWA GUI ---
+    class BankWindow {
+        -QStackedWidget* stackedWidget
+        -BankDatabaseHandler dbHandler
+        -Transaction transaction
+        -setupLoginPage()
+        -setupMenuPage()
+        -handleWithdraw()
+        -handleDeposit()
     }
 
-    CashStorage <|-- CashDispenser
+    %% --- RELACJE ---
+    
+    %% Dziedziczenie (Inheritance)
+    CashStorage <|-- CashDispenser : Dziedziczy zarządzanie gotówką
+    IReceiptStrategy <|.. StandardReceipt : Implementuje
+    IReceiptStrategy <|.. PrivacyReceipt : Implementuje
+    
+    %% Wielodziedziczenie (Multiple Inheritance)
     CashDispenser <|-- Transaction
     BankDatabaseHandler <|-- Transaction
+    
     CashDispenser <|-- Service
     BankDatabaseHandler <|-- Service
-    AtmGui *-- Transaction
+
+    %% Agregacja (Aggregation) - Wzorzec Strategia
+    CashDispenser o-- IReceiptStrategy : Posiada (opcjonalnie)
+
+    %% Kompozycja (Composition) - GUI
+    BankWindow *-- Transaction : Używa do operacji
+    BankWindow *-- BankDatabaseHandler : Używa do logowania
 ```
