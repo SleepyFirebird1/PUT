@@ -24,17 +24,20 @@ def tabu_initialize(graph, colored_graph_1):
     return colored_graph, goal
 
 
-def tabu_search(graph, t):
+def tabu_search(graph, t, max_lenght=10):
     start_time = time.time()
     initial_solution, _ = greedy_coloring(graph)
     best_solution = list(initial_solution)
+    last_improvement_time = start_time
 
     while time.time() - start_time < t:
         temp_solution, max_color = tabu_initialize(graph, best_solution)
-        tabu_max_lenght = 10
+        tabu_max_lenght = max_lenght
         tabu = []
         conflicts_list = conflicts(graph, temp_solution)
         while conflicts_list and time.time() - start_time < t:
+            if time.time() - last_improvement_time > 30:
+                break
             conflict_node = random.choice(conflicts_list)
             conflicts_for_each_color = [float("inf")] * (max_color + 1)
             # check every possible solution
@@ -69,4 +72,12 @@ def tabu_search(graph, t):
             conflicts_list = conflicts(graph, temp_solution)
         if not conflicts_list:
             best_solution = list(temp_solution)
+            last_improvement_time = time.time()
     return best_solution, max(best_solution)
+
+
+def run_tabu(args):
+    i, matrix, t, tabu_lenght = args
+    print(f"Algorithm starts {i}\n")
+    result, max_val = tabu_search(matrix, t, tabu_lenght)
+    return i, tabu_lenght, max_val
