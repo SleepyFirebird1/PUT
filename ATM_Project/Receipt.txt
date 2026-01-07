@@ -1,5 +1,5 @@
-=== 2025-11-12 18:10:40 ===
+=== 2026-01-07 23:18:57 ===
 Konto: 1234
-Operacja: WPŁATA
-Kwota: 10000 PLN
+Operacja: WYPŁATA
+Kwota: 2000 PLN
 

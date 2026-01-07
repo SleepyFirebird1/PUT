@@ -344,3 +344,51 @@ Stan po operacji:
 100 2
 50 68
 
+=== 2026-01-07 19:55:38 ===
+Operacja: WYPŁATA
+Kwota: 1200 PLN
+Pobrano:
+500 2
+200 1
+Stan po operacji:
+500 13
+200 13
+100 2
+50 68
+
+=== 2026-01-07 23:16:25 ===
+Operacja: WYPŁATA
+Kwota: 5100 PLN
+Pobrano:
+500 10
+100 1
+Stan po operacji:
+500 3
+200 13
+100 1
+50 68
+
+=== 2026-01-07 23:17:28 ===
+Operacja: WPŁATA
+Kwota: 5100 PLN
+Dodano:
+500 9
+100 1
+50 10
+Stan po operacji:
+500 12
+200 13
+100 2
+50 78
+
+=== 2026-01-07 23:18:57 ===
+Operacja: WYPŁATA
+Kwota: 2000 PLN
+Pobrano:
+500 4
+Stan po operacji:
+500 8
+200 13
+100 2
+50 78
+
