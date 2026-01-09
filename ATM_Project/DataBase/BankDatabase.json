@@ -15,7 +15,7 @@
     },
     "1456": {
         "accountId": "1456",
-        "balance": 2000,
+        "balance": 3000.0,
         "cardNumber": "1456",
         "isBlocked": false,
         "pin": "1111"

@@ -392,3 +392,16 @@ Stan po operacji:
 100 2
 50 78
 
+=== 2026-01-09 09:07:03 ===
+Operacja: WPŁATA
+Kwota: 1000 PLN
+Dodano:
+500 1
+200 2
+50 2
+Stan po operacji:
+500 9
+200 15
+100 2
+50 80
+
