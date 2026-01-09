@@ -5,15 +5,11 @@ import multiprocessing
 
 if __name__ == "__main__":
     instances = [
-        ("gc_1000", 5),
-        ("gc500", 5),
-        ("le450_5a", 4),
-        ("miles250", 4),
-        ("queen6", 4),
+        ("instance_small", 3),
     ]
     matrixes = []
     for instance, max_lenght in instances:
-        new_file_path = "./utils/presentation.txt"
+        new_file_path = "./utils/report.txt"
         file_path = f"./utils//instance/{instance}.txt"
         num_nodes, edges = read_from_file(file_path)
         adjacency_matrix = matrix_from_edges(num_nodes, edges)
@@ -23,11 +19,14 @@ if __name__ == "__main__":
     with multiprocessing.Pool() as pool:
         tasks = []
         for instance, adjacency_matrix, tabu_lenght in matrixes:
-            tasks.append((instance, adjacency_matrix, 180, tabu_lenght))
+            tasks.append((instance, adjacency_matrix, 30, tabu_lenght))
         results = pool.map(run_tabu, tasks)
-        for instance, tabu_lenght, tabu_search_max, _ in results:
+        for instance, tabu_lenght, tabu_search_max, result in results:
             with open(new_file_path, "a") as file:
                 file.write("----------------------------\n")
                 file.write(f"Instance: {instance}\n")
                 file.write(f"Tabu: {tabu_lenght}, {tabu_search_max}\n")
+                file.write(f"Tabu Solution: {result}\n")
+                file.write(f"Greedy: {max_color}\n")
+                file.write(f"Initial Solution: {colors}\n")
                 file.write("----------------------------\n")

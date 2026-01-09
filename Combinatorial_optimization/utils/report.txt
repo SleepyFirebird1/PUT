@@ -1,0 +1,7 @@
+----------------------------
+Instance: instance_small
+Tabu: 3, 3
+Tabu Solution: [0, 1, 2, 3, 3, 3, 2]
+Greedy: 3
+Initial Solution: [0, 1, 2, 3, 3, 3, 2]
+----------------------------

@@ -78,6 +78,6 @@ def tabu_search(graph, t, max_lenght=10):
 
 def run_tabu(args):
     i, matrix, t, tabu_lenght = args
-    print(f"Algorithm starts {i}\n")
+    print(f"Algorithm starts {i}")
     result, max_val = tabu_search(matrix, t, tabu_lenght)
-    return i, tabu_lenght, max_val
+    return i, tabu_lenght, max_val, result
