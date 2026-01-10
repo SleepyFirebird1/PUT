@@ -5,9 +5,30 @@ from algorithms.printing_graph import coloring_graph
 import multiprocessing
 
 if __name__ == "__main__":
-    instances = ["gc_1000", "gc500", "le450_5a", "miles250", "queen6"]
+    instances = [
+        "gc500",
+        "gc_1000",
+        "instance_1_20",
+        "instance_1_100",
+        "instance20",
+        "instance100",
+        "inst_01_50_random",
+        "inst_02_150_sparse",
+        "inst_03_250_flat3",
+        "inst_04_400_dense",
+        "inst_05_500_geo",
+        "inst_06_800_flat10",
+        "inst_07_1000_scale_free",
+        "inst_08_1500_random_hard",
+        "inst_09_2500_sparse",
+        "inst_10_3500_flat50",
+        "inst_11_5000_massive",
+    ]
+    instances2 =[
+        
+    ]
     for instance in instances:
-        new_file_path = "./utils/results.txt"
+        new_file_path = "./utils/presentation_results.txt"
         file_path = f"./utils//instance/{instance}.txt"
         num_nodes, edges = read_from_file(file_path)
         adjacency_matrix = matrix_from_edges(num_nodes, edges)
@@ -25,6 +46,7 @@ if __name__ == "__main__":
             for i, tabu_lenght, tabu_search_max in results:
                 with open(new_file_path, "a") as file:
                     file.write(f"Tabu: {tabu_lenght}-{i}, {tabu_search_max}\n")
+                    file.write(f"Greedy: {max_color}\n")
 
         """
         while(True):
