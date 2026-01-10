@@ -25,7 +25,16 @@ if __name__ == "__main__":
         "inst_11_5000_massive",
     ]
     instances2 =[
-        
+        "fpsol2.i.1",
+        "mulsol.i.1",
+        "mulsol.i.2",
+        "mulsol.i.3",
+        "flat300_20_0",
+        "flat300_26_0",
+        "flat300_28_0",
+        "flat1000_60_0",
+        "flat1000_76_0",
+        "flat1000",
     ]
     for instance in instances:
         new_file_path = "./utils/presentation_results.txt"
