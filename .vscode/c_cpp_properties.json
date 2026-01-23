@@ -9,7 +9,8 @@
                 "/opt/homebrew/lib/QtCore.framework/Headers",
                 "/opt/homebrew/lib/QtGui.framework/Headers",
                 "/opt/homebrew/lib/QtWidgets.framework/Headers",
-                "/opt/homebrew/lib/Qt*.framework/Headers"
+                "/opt/homebrew/lib/Qt*.framework/Headers",
+                "${workspaceFolder}/PSIW_Project"
             ],
             "defines": [],
             "macFrameworkPath": [
