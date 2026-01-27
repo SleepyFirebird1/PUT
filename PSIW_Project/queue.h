@@ -16,9 +16,11 @@ struct TQueue {
     int current_count; // liczba wiadomosci w kolejce
     int head; // index zapisu
     int tail; // index odczytu
+    int total_produced; // lacznie wyprodukowanych wiadomosci
 
     pthread_t *sub_threads; // id watkow subskrybujacych
-    int *sub_read_index; // index nastepnej wiadomosci dla watku
+    int *sub_read_index; // index nastepnej wiadomosci dla watku (zachowane dla kompatybilnosci)
+    int *sub_read_total; // ile dany subskrybent juz przeczytal lacznie
     int sub_count; // liczba subskrybentow
     int sub_capacity; // rozmiar tablic subskrybentow
 
