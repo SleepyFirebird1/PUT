@@ -262,6 +262,28 @@ int removeMsg(TQueue *queue, char *msg) {
                 }
             }
             found = 1;
+            if (curr != queue->tail) {
+                 int prev = curr;
+                 while(1) {
+                     int next = (prev + 1) % queue->capacity;
+                     if (next == queue->head) break;
+                     queue->messages[prev] = queue->messages[next];
+                     queue->ref_counts[prev] = queue->ref_counts[next];
+
+                     for(int k=0; k < queue->sub_count; k++) {
+                         if (queue->sub_read_index[k] == next) {
+                             queue->sub_read_index[k] = prev;
+                         }
+                     }
+                     queue->messages[next] = NULL;
+                     queue->ref_counts[next] = 0;
+                     prev = next;
+                 }
+                 
+                 queue->head = (queue->head - 1 + queue->capacity) % queue->capacity;
+                 queue->current_count--;
+                 pthread_cond_signal(&queue->cond_space);
+            }
             break;
         }
         curr = (curr + 1) % queue->capacity;
