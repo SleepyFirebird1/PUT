@@ -229,6 +229,11 @@ int getAvailable(TQueue *queue, pthread_t thread) {
     }
     
     int pending = queue->total_produced - queue->sub_read_total[thread_idx];
+    
+    if (pending > queue->capacity) {
+        pending = queue->capacity;
+    }
+
     int count = 0;
     int idx = queue->sub_read_index[thread_idx];
     for (int k = 0; k < pending; k++) {
@@ -353,8 +358,8 @@ void setSize(TQueue *queue, int size) {
     for (int i = 0; i < queue->sub_count; i++) {
         int old_read = queue->sub_read_index[i];
         // obsluga przypadku w ktorym subskrybent czekal na nowa wiadomosc
-        if (old_read == queue->head && queue->current_count < queue->capacity) {
-            queue->sub_read_index[i] = queue->current_count;
+        if (old_read == queue->head && queue->current_count < size) {
+            queue->sub_read_index[i] = queue->current_count % size;
         } 
         else if (index_map[old_read] != -1) {
             // tych ktorzy wskazywali na istniejaca wiadomosc mapujemy na nowy indeks
@@ -362,7 +367,7 @@ void setSize(TQueue *queue, int size) {
         } 
         else {
              // subskrybent wskazywał na coś co usunęliśmy lub na stary head wskazujemy na poczatek kolejki
-             queue->sub_read_index[i] = queue->current_count;
+             queue->sub_read_index[i] = queue->current_count % size;
         }
     }
     
