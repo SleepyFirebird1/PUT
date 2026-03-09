@@ -42,6 +42,12 @@ void error_callback(int error, const char* description) {
 void initOpenGLProgram(GLFWwindow* window) {
     initShaders();
 	//************Tutaj umieszczaj kod, który należy wykonać raz, na początku programu************	
+	glClearColor(0, 0, 0, 1);//Ustaw czarny kolor czyszczenia ekranu
+
+	// Kompilacja na mac wymaga tego
+	GLuint vao;
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
 }
 
 
@@ -51,14 +57,29 @@ void freeOpenGLProgram(GLFWwindow* window) {
     //************Tutaj umieszczaj kod, który należy wykonać po zakończeniu pętli głównej************	
 }
 
-
+float speed = 3.14;
 
 //Procedura rysująca zawartość sceny
-void drawScene(GLFWwindow* window) {
-	glClear(GL_COLOR_BUFFER_BIT);
-	glClearColor(1, 1, 1, 1);
+void drawScene(GLFWwindow* window, float angle) {
+	//************Tutaj umieszczaj kod rysujący obraz******************
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	glm::mat4 P = glm::perspective(glm::radians(50.0f), 1.0f, 1.0f, 50.0f);
+	glm::mat4 V = glm::lookAt(glm::vec3(0.0f, 0.0f, -5.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	// program cieniujacy
+	spConstant->use(); 
+	// macierz rzutowania
+	glUniformMatrix4fv(spConstant->u("P"), 1, false, glm::value_ptr(P));
+	// macierz widoku
+	glUniformMatrix4fv(spConstant->u("V"), 1, false, glm::value_ptr(V));
+	// macierz modelu
+	glm::mat4 M = glm::mat4(1.0f);
+	M = glm::rotate(M, angle, glm::vec3(0.0f, 1.0f, 0.0f));
+	// zaladowanie macierzy do progamu cieniujacego
+	glUniformMatrix4fv(spConstant->u("M"), 1, false, glm::value_ptr(M));
+	Models::torus.drawWire();
+
 	glfwSwapBuffers(window);
-	
 }
 
 
@@ -73,6 +94,13 @@ int main(void)
 		exit(EXIT_FAILURE);
 	}
 
+	#ifdef __APPLE__
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+	#endif
+
 	window = glfwCreateWindow(500, 500, "OpenGL", NULL, NULL);  //Utwórz okno 500x500 o tytule "OpenGL" i kontekst OpenGL.
 
 	if (!window) //Jeżeli okna nie udało się utworzyć, to zamknij program
@@ -85,6 +113,7 @@ int main(void)
 	glfwMakeContextCurrent(window); //Od tego momentu kontekst okna staje się aktywny i polecenia OpenGL będą dotyczyć właśnie jego.
 	glfwSwapInterval(1); //Czekaj na 1 powrót plamki przed pokazaniem ukrytego bufora
 
+	glewExperimental = GL_TRUE;
 	if (glewInit() != GLEW_OK) { //Zainicjuj bibliotekę GLEW
 		fprintf(stderr, "Nie można zainicjować GLEW.\n");
 		exit(EXIT_FAILURE);
@@ -95,7 +124,15 @@ int main(void)
 	//Główna pętla	
 	while (!glfwWindowShouldClose(window)) //Tak długo jak okno nie powinno zostać zamknięte
 	{		
-		drawScene(window); //Wykonaj procedurę rysującą
+		float angle=0;
+		glfwSetTime(0);
+		while (!glfwWindowShouldClose(window)) {
+			angle+=speed*glfwGetTime();
+			glfwSetTime(0);
+			drawScene(window,angle);
+			glfwPollEvents();
+			} 
+		//Wykonaj procedurę rysującą
 		glfwPollEvents(); //Wykonaj procedury callback w zalezności od zdarzeń jakie zaszły.
 	}
 
