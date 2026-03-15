@@ -1,3 +1,8 @@
+/**
+ * @file cube.h
+ * @brief Nagłówek modelu sześcianu.
+ */
+
 /*
 Niniejszy program jest wolnym oprogramowaniem; możesz go
 rozprowadzać dalej i / lub modyfikować na warunkach Powszechnej

@@ -1,3 +1,8 @@
+/**
+ * @file torus.cpp
+ * @brief Implementacja modelu torusa.
+ */
+
 /*
 Niniejszy program jest wolnym oprogramowaniem; możesz go
 rozprowadzać dalej i / lub modyfikować na warunkach Powszechnej

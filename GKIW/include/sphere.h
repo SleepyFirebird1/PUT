@@ -1,3 +1,8 @@
+/**
+ * @file sphere.h
+ * @brief Nagłówek modelu sfery.
+ */
+
 /*
 Niniejszy program jest wolnym oprogramowaniem; możesz go
 rozprowadzać dalej i / lub modyfikować na warunkach Powszechnej

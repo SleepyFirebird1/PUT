@@ -1,3 +1,8 @@
+/**
+ * @file myCube.h
+ * @brief Dodatkowy model własnej kostki.
+ */
+
 ﻿#ifndef MYCUBE_H_INCLUDED
 #define MYCUBE_H_INCLUDED
 

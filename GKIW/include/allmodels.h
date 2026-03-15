@@ -1,3 +1,8 @@
+/**
+ * @file allmodels.h
+ * @brief Wspólny plik nagłówkowy dla wszystkich modeli 3D.
+ */
+
 /*
 Niniejszy program jest wolnym oprogramowaniem; możesz go
 rozprowadzać dalej i / lub modyfikować na warunkach Powszechnej

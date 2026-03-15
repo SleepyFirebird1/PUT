@@ -1,3 +1,8 @@
+/**
+ * @file shaderprogram.h
+ * @brief Nagłówek obsługujący programy cieniujące.
+ */
+
 ﻿/*
 Niniejszy program jest wolnym oprogramowaniem; możesz go
 rozprowadzać dalej i / lub modyfikować na warunkach Powszechnej

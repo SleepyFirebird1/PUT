@@ -1,3 +1,8 @@
+/**
+ * @file lodepng.cpp
+ * @brief Biblioteka ładująca pliki PNG.
+ */
+
 /*
 LodePNG version 20160124
 

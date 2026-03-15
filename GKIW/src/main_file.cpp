@@ -1,3 +1,8 @@
+/**
+ * @file main_file.cpp
+ * @brief Główny plik programu OpenGL.
+ */
+
 /*
 Niniejszy program jest wolnym oprogramowaniem; możesz go
 rozprowadzać dalej i / lub modyfikować na warunkach Powszechnej
@@ -17,6 +22,7 @@ jeśli nie - napisz do Free Software Foundation, Inc., 59 Temple
 Place, Fifth Floor, Boston, MA  02110 - 1301  USA
 */
 
+
 #define GLM_FORCE_RADIANS
 
 #include <GL/glew.h>
@@ -31,6 +37,11 @@ Place, Fifth Floor, Boston, MA  02110 - 1301  USA
 #include "lodepng.h"
 #include "shaderprogram.h"
 
+float speed = 0;
+int torusCount = 1;
+int maxtorusCount = 32;
+float MY_PI = 3.14159265358979323846f;
+
 
 //Procedura obsługi błędów
 void error_callback(int error, const char* description) {
@@ -43,6 +54,7 @@ void initOpenGLProgram(GLFWwindow* window) {
     initShaders();
 	//************Tutaj umieszczaj kod, który należy wykonać raz, na początku programu************	
 	glClearColor(0, 0, 0, 1);//Ustaw czarny kolor czyszczenia ekranu
+	glEnable(GL_DEPTH_TEST);
 
 	// Kompilacja na mac wymaga tego
 	GLuint vao;
@@ -57,28 +69,63 @@ void freeOpenGLProgram(GLFWwindow* window) {
     //************Tutaj umieszczaj kod, który należy wykonać po zakończeniu pętli głównej************	
 }
 
-float speed = 3.14;
+void key_callback(GLFWwindow* window, int key,
+	int scancode, int action, int mods){
+	if (action == GLFW_PRESS) {
+		if (key == GLFW_KEY_RIGHT) speed = 3.14;
+		if (key == GLFW_KEY_LEFT) speed = -3.14;
+		if (key == GLFW_KEY_UP) {
+			if (torusCount < maxtorusCount) torusCount++;
+		}
+		if (key == GLFW_KEY_DOWN) {
+			if (torusCount > 0) torusCount--;
+		}
+	}
+	if (action == GLFW_RELEASE) {
+		if (key == GLFW_KEY_RIGHT) speed = 0;
+		if (key == GLFW_KEY_LEFT) speed = 0;
+		}
+}
+
 
 //Procedura rysująca zawartość sceny
 void drawScene(GLFWwindow* window, float angle) {
 	//************Tutaj umieszczaj kod rysujący obraz******************
+	glEnable(GL_DEPTH_TEST);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+	
 	glm::mat4 P = glm::perspective(glm::radians(50.0f), 1.0f, 1.0f, 50.0f);
 	glm::mat4 V = glm::lookAt(glm::vec3(0.0f, 0.0f, -5.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	// program cieniujacy
-	spConstant->use(); 
+	spLambert->use(); 
 	// macierz rzutowania
-	glUniformMatrix4fv(spConstant->u("P"), 1, false, glm::value_ptr(P));
+	glUniformMatrix4fv(spLambert->u("P"), 1, false, glm::value_ptr(P));
 	// macierz widoku
-	glUniformMatrix4fv(spConstant->u("V"), 1, false, glm::value_ptr(V));
-	// macierz modelu
-	glm::mat4 M = glm::mat4(1.0f);
-	M = glm::rotate(M, angle, glm::vec3(0.0f, 1.0f, 0.0f));
-	// zaladowanie macierzy do progamu cieniujacego
-	glUniformMatrix4fv(spConstant->u("M"), 1, false, glm::value_ptr(M));
-	Models::torus.drawWire();
-
+	glUniformMatrix4fv(spLambert->u("V"), 1, false, glm::value_ptr(V));
+	for (int i = 0; i < torusCount; ++i) {
+		glm::vec3 position;
+		if (torusCount <= 1) {
+			position = glm::vec3(0.0f, 0.0f, 0.0f);
+		}
+		else {
+			float angle = (float)i * 2.0f * MY_PI/ (float) torusCount;
+			float x = cos(angle);
+			float y = sin(angle);
+			position = glm::vec3(x, y, 0.0f);
+		}
+		glm::mat4 M = glm::mat4(1.0f);
+		// ustawiamy torusa na pozycji
+		M = glm::translate(M, position);
+		// rotacja torusa
+		M = glm::rotate(M, angle, glm::vec3(1.0f, 1.0f, 0.0f));
+		// skala torusa
+		M = glm::scale(M, glm::vec3(0.5f));
+		glUniformMatrix4fv(spLambert->u("M"), 1, false, glm::value_ptr(M));
+		glUniform4f(spLambert->u("color"), 0.0f, 0.5f, 0.5f, 0.0f);
+		Models::torus.drawSolid();
+	}
+	//Skopiowanie bufora ukrytego do widocznego. Z reguły ostatnie polecenie w procedurze drawScene.
 	glfwSwapBuffers(window);
 }
 
@@ -120,6 +167,7 @@ int main(void)
 	}
 
 	initOpenGLProgram(window); //Operacje inicjujące
+	glfwSetKeyCallback(window, key_callback);
 
 	//Główna pętla	
 	while (!glfwWindowShouldClose(window)) //Tak długo jak okno nie powinno zostać zamknięte

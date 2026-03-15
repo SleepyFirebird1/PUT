@@ -1,3 +1,8 @@
+/**
+ * @file teapot.cpp
+ * @brief Implementacja modelu czajnika.
+ */
+
 /*
 Niniejszy program jest wolnym oprogramowaniem; możesz go
 rozprowadzać dalej i / lub modyfikować na warunkach Powszechnej

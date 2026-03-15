@@ -1,3 +1,8 @@
+/**
+ * @file model.cpp
+ * @brief Klasy bazowe modeli obiektów.
+ */
+
 /*
 Niniejszy program jest wolnym oprogramowaniem; możesz go
 rozprowadzać dalej i / lub modyfikować na warunkach Powszechnej

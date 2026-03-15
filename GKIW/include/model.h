@@ -1,3 +1,8 @@
+/**
+ * @file model.h
+ * @brief Nagłówki interfejsu modeli 3D.
+ */
+
 /*
 Niniejszy program jest wolnym oprogramowaniem; możesz go
 rozprowadzać dalej i / lub modyfikować na warunkach Powszechnej

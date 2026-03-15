@@ -1,3 +1,8 @@
+/**
+ * @file constants.h
+ * @brief Stałe globalne parametrów środowiska.
+ */
+
 /*
 Niniejszy program jest wolnym oprogramowaniem; możesz go
 rozprowadzać dalej i / lub modyfikować na warunkach Powszechnej

@@ -1,3 +1,8 @@
+/**
+ * @file lodepng.h
+ * @brief Nagłówek biblioteki LodePNG do tekstur.
+ */
+
 /*
 LodePNG version 20160124
 
