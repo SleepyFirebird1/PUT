@@ -37,11 +37,13 @@ Place, Fifth Floor, Boston, MA  02110 - 1301  USA
 #include "lodepng.h"
 #include "shaderprogram.h"
 
+using namespace glm;
+
 float speed = 0;
 float turn = 0;
 float My_PI = 3.141592653589793;
 
-static Models::Torus kolo(0.3,0.1,12,12);
+
 //Procedura obsługi błędów
 void error_callback(int error, const char* description) {
 	fputs(description, stderr);
@@ -73,8 +75,8 @@ void key_callback(GLFWwindow* window, int key,
 	if (action == GLFW_PRESS) {
 		if (key == GLFW_KEY_RIGHT) speed = 3.14;
 		if (key == GLFW_KEY_LEFT) speed = -3.14;
-		if (key == GLFW_KEY_A) turn = PI / 6;
-		if (key == GLFW_KEY_D) turn = -PI / 6;
+		if (key == GLFW_KEY_A) turn =  3.14;
+		if (key == GLFW_KEY_D) turn = -3.14;
 	}
 	if (action == GLFW_RELEASE) {
 		if (key == GLFW_KEY_RIGHT) speed = 0;
@@ -83,7 +85,32 @@ void key_callback(GLFWwindow* window, int key,
 		if (key == GLFW_KEY_D) turn = 0;
 		}
 }
+void drawCuboid(mat4 M, float sizeX, float sizeY, float sizeZ) {
+    mat4 M_scaled = scale(M, vec3(sizeX, sizeY, sizeZ));
+	glUniform4f(spLambert->u("color"), 1, 1, 1, 1);
+    glUniformMatrix4fv(spLambert->u("M"), 1, false, value_ptr(M_scaled));
+    Models::cube.drawSolid();
+}
 
+void drawingFinger(mat4 M, float turn) {
+    mat4 M_joint1 = M;
+    M_joint1 = rotate(M_joint1, turn, vec3(0.0f, 0.0f, 1.0f));
+    M_joint1 = translate(M_joint1, vec3(1.0f, 0.0f, 0.0f));
+	drawCuboid(M_joint1, 1.0f, 0.25f, 0.5f);
+
+    mat4 M_joint2 = M_joint1;
+    M_joint2 = translate(M_joint2, vec3(1.0f, 0.0f, 0.0f));
+    M_joint2 = rotate(M_joint2, turn, vec3(0.0f, 0.0f, 1.0f));
+    M_joint2 = translate(M_joint2, vec3(1.0f, 0.0f, 0.0f));
+	drawCuboid(M_joint2, 1.0f, 0.25f, 0.5f);
+
+    mat4 M_joint3 = M_joint2;
+    M_joint3 = translate(M_joint3, vec3(1.0f, 0.0f, 0.0f));
+    M_joint3 = rotate(M_joint3, turn, vec3(0.0f, 0.0f, 1.0f));
+    M_joint3 = translate(M_joint3, vec3(1.0f, 0.0f, 0.0f));
+	drawCuboid(M_joint3, 1.0f, 0.25f, 0.5f);
+
+}
 
 //Procedura rysująca zawartość sceny
 void drawScene(GLFWwindow* window, float angle, float wheelAngle) {
@@ -91,59 +118,38 @@ void drawScene(GLFWwindow* window, float angle, float wheelAngle) {
 	glEnable(GL_DEPTH_TEST);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
  
-	glm::mat4 P = glm::perspective(glm::radians(50.0f), 1.0f, 1.0f, 50.0f);
-	glm::mat4 V = glm::lookAt(glm::vec3(0.0f, 2.0f, -7.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	mat4 P = perspective(radians(50.0f), 1.0f, 1.0f, 50.0f);
+	mat4 V = lookAt(vec3(0.0f, 2.0f, -7.0f), vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
 	// program cieniujacy
 	spLambert->use(); 
 	// macierz rzutowania
-	glUniformMatrix4fv(spLambert->u("P"), 1, false, glm::value_ptr(P));
+	glUniformMatrix4fv(spLambert->u("P"), 1, false, value_ptr(P));
 	// macierz widoku
-	glUniformMatrix4fv(spLambert->u("V"), 1, false, glm::value_ptr(V));
-
-	glm::mat4 M = glm::mat4(1.0f);
-	M = glm::scale(M, glm::vec3(0.8f, 0.8f, 0.8f));
-	M = glm::rotate(M, angle, glm::vec3(0.0f, 1.0f, 0.0f));
-
-	// Macierz dla podwozia
-	glm::mat4 M_Podwozie = M;
-	M_Podwozie = glm::scale(M_Podwozie, glm::vec3(1.5f, 0.125f, 1.0f));
-	glUniform4f(spLambert->u("color"), 1, 1, 1, 1);
-	glUniformMatrix4fv(spLambert->u("M"), 1, false, glm::value_ptr(M_Podwozie));  //Załadowanie macierzy modelu do programu cieniującego
-	Models::cube.drawSolid(); //Narysowanie obiektu
-
-	// Macierz dla koła 1
-	glm::mat4 M_Kolo1 = M;
-	M_Kolo1 = glm::translate(M_Kolo1, glm::vec3(1.5f, 0.0f, 1.0f));
-	M_Kolo1 = glm::rotate(M_Kolo1, turn, glm::vec3(0.0f, 1.0f, 0.0f));
-	M_Kolo1 = glm::rotate(M_Kolo1, wheelAngle, glm::vec3(0.0f, 0.0f, 1.0f));
-	glUniform4f(spLambert->u("color"), 1, 1, 1, 1);
-	glUniformMatrix4fv(spLambert->u("M"), 1, false, glm::value_ptr(M_Kolo1));  //Załadowanie macierzy modelu do programu cieniującego
-	kolo.drawSolid(); //Narysowanie obiektu
-
-	// Macierz dla koła 2
-	glm::mat4 M_Kolo2 = M;
-	M_Kolo2 = glm::translate(M_Kolo2, glm::vec3(1.5f, 0.0f, -1.0f));
-	M_Kolo2 = glm::rotate(M_Kolo2, turn, glm::vec3(0.0f, 1.0f, 0.0f));
-	M_Kolo2 = glm::rotate(M_Kolo2, wheelAngle, glm::vec3(0.0f, 0.0f, 1.0f));
-	glUniform4f(spLambert->u("color"), 1, 1, 1, 1);
-	glUniformMatrix4fv(spLambert->u("M"), 1, false, glm::value_ptr(M_Kolo2));  //Załadowanie macierzy modelu do programu cieniującego
-	kolo.drawSolid(); //Narysowanie obiektu
-
-	// Macierz dla koła 3
-	glm::mat4 M_Kolo3 = M;
-	M_Kolo3 = glm::translate(M_Kolo3, glm::vec3(-1.5f, 0.0f, 1.0f));
-	M_Kolo3 = glm::rotate(M_Kolo3, wheelAngle, glm::vec3(0.0f, 0.0f, 1.0f));
-	glUniform4f(spLambert->u("color"), 1, 1, 1, 1);
-	glUniformMatrix4fv(spLambert->u("M"), 1, false, glm::value_ptr(M_Kolo3));  //Załadowanie macierzy modelu do programu cieniującego
-	kolo.drawSolid(); //Narysowanie obiektu
-
-	// Macierz dla koła 4
-	glm::mat4 M_Kolo4 = M;
-	M_Kolo4 = glm::translate(M_Kolo4, glm::vec3(-1.5f, 0.0f, -1.0f));
-	M_Kolo4 = glm::rotate(M_Kolo4, wheelAngle, glm::vec3(0.0f, 0.0f, 1.0f));
-	glUniform4f(spLambert->u("color"), 1, 1, 1, 1);
-	glUniformMatrix4fv(spLambert->u("M"), 1, false, glm::value_ptr(M_Kolo4));  //Załadowanie macierzy modelu do programu cieniującego
-	kolo.drawSolid(); //Narysowanie obiektu
+	glUniformMatrix4fv(spLambert->u("V"), 1, false, value_ptr(V));
+	// srodrecze
+	mat4 M = mat4(1.0f);
+	M = scale(M, vec3(0.5f, 0.5f, 0.5f));
+	M = rotate(M, angle, vec3(0.0f, 1.0f, 0.0f));
+	drawCuboid(M, 0.5f, 0.25f, 0.5f);
+	// palec 1
+	mat4 M_p1 = M;
+	M_p1 = translate(M_p1, vec3(0.5f, 0.0f, 0.0f));
+	drawingFinger(M_p1, wheelAngle);
+	// palec 2
+	mat4 M_p2 = M;
+	M_p2 = rotate(M_p2, My_PI/2, vec3(0.0f, 1.0f, 0.0f));
+	M_p2 = translate(M_p2, vec3(0.5f, 0.0f, 0.0f));
+	drawingFinger(M_p2, wheelAngle);
+	// palec 3
+	mat4 M_p3 = M;
+	M_p3 = rotate(M_p3, My_PI, vec3(0.0f, 1.0f, 0.0f));
+	M_p3 = translate(M_p3, vec3(0.5f, 0.0f, 0.0f));
+	drawingFinger(M_p3, wheelAngle);
+	// palec 4
+	mat4 M_p4 = M;
+	M_p4 = rotate(M_p4, 3*My_PI/2, vec3(0.0f, 1.0f, 0.0f));
+	M_p4 = translate(M_p4, vec3(0.5f, 0.0f, 0.0f));
+	drawingFinger(M_p4, wheelAngle);
 
 	glfwSwapBuffers(window);
 }
@@ -167,7 +173,7 @@ int main(void)
 		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 	#endif
 
-	window = glfwCreateWindow(1000, 1000, "OpenGL", NULL, NULL);  //Utwórz okno 500x500 o tytule "OpenGL" i kontekst OpenGL.
+	window = glfwCreateWindow(2000, 1000, "OpenGL", NULL, NULL);  //Utwórz okno 500x500 o tytule "OpenGL" i kontekst OpenGL.
 
 	if (!window) //Jeżeli okna nie udało się utworzyć, to zamknij program
 	{
@@ -196,7 +202,7 @@ int main(void)
 		glfwSetTime(0);
 		while (!glfwWindowShouldClose(window)) {
 			angle+=speed*glfwGetTime();
-			wheelAngle += -PI / 6 * glfwGetTime();
+			wheelAngle += turn * glfwGetTime();
 			glfwSetTime(0);
 			drawScene(window,angle, wheelAngle);
 			glfwPollEvents();
