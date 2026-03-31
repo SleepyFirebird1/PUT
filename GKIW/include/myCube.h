@@ -3,7 +3,7 @@
  * @brief Dodatkowy model własnej kostki.
  */
 
-﻿#ifndef MYCUBE_H_INCLUDED
+#ifndef MYCUBE_H_INCLUDED
 #define MYCUBE_H_INCLUDED
 
 int myCubeVertexCount=36;
@@ -126,8 +126,60 @@ float myCubeColors[]={
 				1.0f,1.0f,1.0f,1.0f,
 			};
 
+float myCubeTexCoords[]={
+                //ściana 1
+				0.0f,0.0f,
+				1.0f,1.0f,
+				1.0f,0.0f,
 
+				0.0f,0.0f,
+				0.0f,1.0f,
+				1.0f,1.0f,
 
+				//ściana 2
+				0.0f,0.0f,
+				1.0f,1.0f,
+				1.0f,0.0f,
 
+				0.0f,0.0f,
+				0.0f,1.0f,
+				1.0f,1.0f,
+
+				//ściana 3
+				0.0f,0.0f,
+				1.0f,1.0f,
+				1.0f,0.0f,
+
+				0.0f,0.0f,
+				0.0f,1.0f,
+				1.0f,1.0f,
+
+				//ściana 4
+				0.0f,0.0f,
+				1.0f,1.0f,
+				1.0f,0.0f,
+
+				0.0f,0.0f,
+				0.0f,1.0f,
+				1.0f,1.0f,
+
+				//ściana 5
+				0.0f,0.0f,
+				1.0f,1.0f,
+				1.0f,0.0f,
+
+				0.0f,0.0f,
+				0.0f,1.0f,
+				1.0f,1.0f,
+
+				//ściana 6
+				0.0f,0.0f,
+				1.0f,1.0f,
+				1.0f,0.0f,
+
+				0.0f,0.0f,
+				0.0f,1.0f,
+				1.0f,1.0f,
+			};
 
 #endif // MYCUBE_H_INCLUDED

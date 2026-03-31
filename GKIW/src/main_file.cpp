@@ -32,10 +32,14 @@ Place, Fifth Floor, Boston, MA  02110 - 1301  USA
 #include <glm/gtc/matrix_transform.hpp>
 #include <stdlib.h>
 #include <stdio.h>
+#include <vector>
 #include "constants.h"
 #include "allmodels.h"
 #include "lodepng.h"
 #include "shaderprogram.h"
+#include "myCube.h"
+
+GLuint tex;
 
 using namespace glm;
 
@@ -61,6 +65,21 @@ void initOpenGLProgram(GLFWwindow* window) {
 	GLuint vao;
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
+
+	// Ładowanie tekstury
+	std::vector<unsigned char> image;
+	unsigned width, height;
+	unsigned error = lodepng::decode(image, width, height, "assets/textures/bricks.png");
+	if (error) {
+		printf("Błąd ładowania tekstury: %s\n", lodepng_error_text(error));
+		exit(1);
+	}
+
+	glGenTextures(1, &tex);
+	glBindTexture(GL_TEXTURE_2D, tex);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, &image[0]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 }
 
 
@@ -85,71 +104,59 @@ void key_callback(GLFWwindow* window, int key,
 		if (key == GLFW_KEY_D) turn = 0;
 		}
 }
-void drawCuboid(mat4 M, float sizeX, float sizeY, float sizeZ) {
-    mat4 M_scaled = scale(M, vec3(sizeX, sizeY, sizeZ));
-	glUniform4f(spLambert->u("color"), 1, 1, 1, 1);
-    glUniformMatrix4fv(spLambert->u("M"), 1, false, value_ptr(M_scaled));
-    Models::cube.drawSolid();
-}
 
-void drawingFinger(mat4 M, float turn) {
-    mat4 M_joint1 = M;
-    M_joint1 = rotate(M_joint1, turn, vec3(0.0f, 0.0f, 1.0f));
-    M_joint1 = translate(M_joint1, vec3(1.0f, 0.0f, 0.0f));
-	drawCuboid(M_joint1, 1.0f, 0.25f, 0.5f);
-
-    mat4 M_joint2 = M_joint1;
-    M_joint2 = translate(M_joint2, vec3(1.0f, 0.0f, 0.0f));
-    M_joint2 = rotate(M_joint2, turn, vec3(0.0f, 0.0f, 1.0f));
-    M_joint2 = translate(M_joint2, vec3(1.0f, 0.0f, 0.0f));
-	drawCuboid(M_joint2, 1.0f, 0.25f, 0.5f);
-
-    mat4 M_joint3 = M_joint2;
-    M_joint3 = translate(M_joint3, vec3(1.0f, 0.0f, 0.0f));
-    M_joint3 = rotate(M_joint3, turn, vec3(0.0f, 0.0f, 1.0f));
-    M_joint3 = translate(M_joint3, vec3(1.0f, 0.0f, 0.0f));
-	drawCuboid(M_joint3, 1.0f, 0.25f, 0.5f);
-
-}
 
 //Procedura rysująca zawartość sceny
 void drawScene(GLFWwindow* window, float angle, float wheelAngle) {
 	//************Tutaj umieszczaj kod rysujący obraz******************
-	glEnable(GL_DEPTH_TEST);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
- 
-	mat4 P = perspective(radians(50.0f), 1.0f, 1.0f, 50.0f);
-	mat4 V = lookAt(vec3(0.0f, 2.0f, -7.0f), vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
-	// program cieniujacy
-	spLambert->use(); 
-	// macierz rzutowania
-	glUniformMatrix4fv(spLambert->u("P"), 1, false, value_ptr(P));
-	// macierz widoku
-	glUniformMatrix4fv(spLambert->u("V"), 1, false, value_ptr(V));
-	// srodrecze
-	mat4 M = mat4(1.0f);
-	M = scale(M, vec3(0.5f, 0.5f, 0.5f));
-	M = rotate(M, angle, vec3(0.0f, 1.0f, 0.0f));
-	drawCuboid(M, 0.5f, 0.25f, 0.5f);
-	// palec 1
-	mat4 M_p1 = M;
-	M_p1 = translate(M_p1, vec3(0.5f, 0.0f, 0.0f));
-	drawingFinger(M_p1, wheelAngle);
-	// palec 2
-	mat4 M_p2 = M;
-	M_p2 = rotate(M_p2, My_PI/2, vec3(0.0f, 1.0f, 0.0f));
-	M_p2 = translate(M_p2, vec3(0.5f, 0.0f, 0.0f));
-	drawingFinger(M_p2, wheelAngle);
-	// palec 3
-	mat4 M_p3 = M;
-	M_p3 = rotate(M_p3, My_PI, vec3(0.0f, 1.0f, 0.0f));
-	M_p3 = translate(M_p3, vec3(0.5f, 0.0f, 0.0f));
-	drawingFinger(M_p3, wheelAngle);
-	// palec 4
-	mat4 M_p4 = M;
-	M_p4 = rotate(M_p4, 3*My_PI/2, vec3(0.0f, 1.0f, 0.0f));
-	M_p4 = translate(M_p4, vec3(0.5f, 0.0f, 0.0f));
-	drawingFinger(M_p4, wheelAngle);
+glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClearColor(0.1F, 0.1F, 0.1F, 1.0F);
+
+	glm::mat4 V = glm::lookAt(
+		glm::vec3(0.0f, 0.0f, 5.0f),
+		glm::vec3(0.0f, 0.0f, 0.0f),
+		glm::vec3(0.0f, 1.0f, 0.0f));
+
+	glm::mat4 P = glm::perspective(glm::radians(50.0f), 1.0f, 1.0f, 50.0f);
+
+	glm::mat4 M = glm::mat4(1.0f);
+
+	M = glm::rotate(M, angle, glm::vec3(1.0f, 0.0f, 0.0f));
+	M = glm::rotate(M, wheelAngle, glm::vec3(0.0f, 1.0f, 0.0f));
+
+	spTextured->use(); // Aktywujemy shader obsługujący tekstury
+
+	// Przesyłamy macierze do shadera
+	glUniformMatrix4fv(spTextured->u("P"), 1, false, glm::value_ptr(P));
+	glUniformMatrix4fv(spTextured->u("V"), 1, false, glm::value_ptr(V));
+	glUniformMatrix4fv(spTextured->u("M"), 1, false, glm::value_ptr(M));
+
+	// Aktywacja tekstury
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, tex);
+	glUniform1i(spTextured->u("tex"), 0);
+
+	GLuint vbuf, tbuf;
+
+	glGenBuffers(1, &vbuf);
+	glBindBuffer(GL_ARRAY_BUFFER, vbuf);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(myCubeVertices), myCubeVertices, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(spTextured->a("vertex"));
+	glVertexAttribPointer(spTextured->a("vertex"), 4, GL_FLOAT, false, 0, 0);
+
+	glGenBuffers(1, &tbuf);
+	glBindBuffer(GL_ARRAY_BUFFER, tbuf);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(myCubeTexCoords), myCubeTexCoords, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(spTextured->a("texCoord"));
+	glVertexAttribPointer(spTextured->a("texCoord"), 2, GL_FLOAT, false, 0, 0);
+
+	glDrawArrays(GL_TRIANGLES, 0, myCubeVertexCount);
+
+	glDisableVertexAttribArray(spTextured->a("vertex"));
+	glDisableVertexAttribArray(spTextured->a("texCoord"));
+
+	glDeleteBuffers(1, &vbuf);
+	glDeleteBuffers(1, &tbuf);
 
 	glfwSwapBuffers(window);
 }
@@ -173,7 +180,7 @@ int main(void)
 		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 	#endif
 
-	window = glfwCreateWindow(2000, 1000, "OpenGL", NULL, NULL);  //Utwórz okno 500x500 o tytule "OpenGL" i kontekst OpenGL.
+	window = glfwCreateWindow(500, 500, "OpenGL", NULL, NULL);  //Utwórz okno 500x500 o tytule "OpenGL" i kontekst OpenGL.
 
 	if (!window) //Jeżeli okna nie udało się utworzyć, to zamknij program
 	{
