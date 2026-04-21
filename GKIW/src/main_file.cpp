@@ -124,39 +124,47 @@ glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	M = glm::rotate(M, angle, glm::vec3(1.0f, 0.0f, 0.0f));
 	M = glm::rotate(M, wheelAngle, glm::vec3(0.0f, 1.0f, 0.0f));
 
-	spTextured->use(); // Aktywujemy shader obsługujący tekstury
+	spLambertTextured->use(); // Aktywujemy shader obsługujący tekstury
 
 	// Przesyłamy macierze do shadera
-	glUniformMatrix4fv(spTextured->u("P"), 1, false, glm::value_ptr(P));
-	glUniformMatrix4fv(spTextured->u("V"), 1, false, glm::value_ptr(V));
-	glUniformMatrix4fv(spTextured->u("M"), 1, false, glm::value_ptr(M));
+	glUniformMatrix4fv(spLambertTextured->u("P"), 1, false, glm::value_ptr(P));
+	glUniformMatrix4fv(spLambertTextured->u("V"), 1, false, glm::value_ptr(V));
+	glUniformMatrix4fv(spLambertTextured->u("M"), 1, false, glm::value_ptr(M));
 
 	// Aktywacja tekstury
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, tex);
-	glUniform1i(spTextured->u("tex"), 0);
+	glUniform1i(spLambertTextured->u("tex"), 0);
 
-	GLuint vbuf, tbuf;
+	GLuint vbuf, tbuf, nbuf;
 
 	glGenBuffers(1, &vbuf);
 	glBindBuffer(GL_ARRAY_BUFFER, vbuf);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(myCubeVertices), myCubeVertices, GL_STATIC_DRAW);
-	glEnableVertexAttribArray(spTextured->a("vertex"));
-	glVertexAttribPointer(spTextured->a("vertex"), 4, GL_FLOAT, false, 0, 0);
+	glEnableVertexAttribArray(spLambertTextured->a("vertex"));
+	glVertexAttribPointer(spLambertTextured->a("vertex"), 4, GL_FLOAT, false, 0, 0);
 
 	glGenBuffers(1, &tbuf);
 	glBindBuffer(GL_ARRAY_BUFFER, tbuf);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(myCubeTexCoords), myCubeTexCoords, GL_STATIC_DRAW);
-	glEnableVertexAttribArray(spTextured->a("texCoord"));
-	glVertexAttribPointer(spTextured->a("texCoord"), 2, GL_FLOAT, false, 0, 0);
+	glEnableVertexAttribArray(spLambertTextured->a("texCoord"));
+	glVertexAttribPointer(spLambertTextured->a("texCoord"), 2, GL_FLOAT, false, 0, 0);
+
+	glGenBuffers(1, &nbuf);
+	glBindBuffer(GL_ARRAY_BUFFER, nbuf);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(normals), normals, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(spLambertTextured->a("normal"));
+	glVertexAttribPointer(spLambertTextured->a("normal"), 4, GL_FLOAT, false, 0, 0);
 
 	glDrawArrays(GL_TRIANGLES, 0, myCubeVertexCount);
 
-	glDisableVertexAttribArray(spTextured->a("vertex"));
-	glDisableVertexAttribArray(spTextured->a("texCoord"));
+	glDisableVertexAttribArray(spLambertTextured->a("vertex"));
+	glDisableVertexAttribArray(spLambertTextured->a("texCoord"));
+	glDisableVertexAttribArray(spLambertTextured->a("normal"));
 
 	glDeleteBuffers(1, &vbuf);
 	glDeleteBuffers(1, &tbuf);
+	glDeleteBuffers(1, &nbuf);
 
 	glfwSwapBuffers(window);
 }

@@ -125,7 +125,31 @@ float myCubeColors[]={
 				1.0f,1.0f,1.0f,1.0f,
 				1.0f,1.0f,1.0f,1.0f,
 			};
+float normals[] = {
+    //ściana 1 (Tył, wskazuje na -Z)
+     0.0f, 0.0f,-1.0f, 0.0f,   0.0f, 0.0f,-1.0f, 0.0f,   0.0f, 0.0f,-1.0f, 0.0f,
+     0.0f, 0.0f,-1.0f, 0.0f,   0.0f, 0.0f,-1.0f, 0.0f,   0.0f, 0.0f,-1.0f, 0.0f,
 
+    //ściana 2 (Przód, wskazuje na +Z)
+     0.0f, 0.0f, 1.0f, 0.0f,   0.0f, 0.0f, 1.0f, 0.0f,   0.0f, 0.0f, 1.0f, 0.0f,
+     0.0f, 0.0f, 1.0f, 0.0f,   0.0f, 0.0f, 1.0f, 0.0f,   0.0f, 0.0f, 1.0f, 0.0f,
+
+    //ściana 3 (Dół, wskazuje na -Y)
+     0.0f,-1.0f, 0.0f, 0.0f,   0.0f,-1.0f, 0.0f, 0.0f,   0.0f,-1.0f, 0.0f, 0.0f,
+     0.0f,-1.0f, 0.0f, 0.0f,   0.0f,-1.0f, 0.0f, 0.0f,   0.0f,-1.0f, 0.0f, 0.0f,
+
+    //ściana 4 (Góra, wskazuje na +Y)
+     0.0f, 1.0f, 0.0f, 0.0f,   0.0f, 1.0f, 0.0f, 0.0f,   0.0f, 1.0f, 0.0f, 0.0f,
+     0.0f, 1.0f, 0.0f, 0.0f,   0.0f, 1.0f, 0.0f, 0.0f,   0.0f, 1.0f, 0.0f, 0.0f,
+
+    //ściana 5 (Lewa, wskazuje na -X)
+    -1.0f, 0.0f, 0.0f, 0.0f,  -1.0f, 0.0f, 0.0f, 0.0f,  -1.0f, 0.0f, 0.0f, 0.0f,
+    -1.0f, 0.0f, 0.0f, 0.0f,  -1.0f, 0.0f, 0.0f, 0.0f,  -1.0f, 0.0f, 0.0f, 0.0f,
+
+    //ściana 6 (Prawa, wskazuje na +X)
+     1.0f, 0.0f, 0.0f, 0.0f,   1.0f, 0.0f, 0.0f, 0.0f,   1.0f, 0.0f, 0.0f, 0.0f,
+     1.0f, 0.0f, 0.0f, 0.0f,   1.0f, 0.0f, 0.0f, 0.0f,   1.0f, 0.0f, 0.0f, 0.0f
+};
 float myCubeTexCoords[]={
                 //ściana 1
 				0.0f,0.0f,
