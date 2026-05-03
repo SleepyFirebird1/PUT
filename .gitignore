@@ -1,0 +1,30 @@
+# 1. Środowiska wirtualne (BARDZO WAŻNE!)
+venv/
+env/
+.env
+
+# 2. Skompilowane pliki tymczasowe Pythona
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# 3. Pliki systemowe macOS (Śmieci z Findera)
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# 4. Folder konfiguracyjny Visual Studio Code
+.vscode/
+
+# 5. Ewentualne logi i pliki tymczasowe (które generowaliśmy przy debugowaniu)
+bounds.txt
+dump*.txt
+dump*.py
+
+assets/
+
+# Aby upewnić się, że nie ignorujemy plików planu ani bibliotek!
+!requirements.txt
+!plan.txt
+!structure.txt
