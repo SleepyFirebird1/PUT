@@ -9,8 +9,6 @@ Faza 1: Baza graficzna i modele (Zobaczyć 3D)
 Faza 2: Czysta logika gry w Go (Bez grafiki)
 1. Stan Planszy (game/board.py): Stworzenie klasy Board (np. tablica 19x19).
 2. Kładzenie kamieni (game/player.py / w board.py): Metoda place_stone(x, y, color) weryfikująca czy pole jest puste.
-3. Zasady przechwytywania (Bicie): Logika sprawdzająca "oddechy" (liberties) grupom kamieni. Kiedy grupa traci ostatni oddech, kamienie znikają.
-4. Zasada Ko: Zabezpieczenie przed nieskończonym powtarzaniem tego samego ruchu.
 
 Faza 3: Połączenie logiki ze światem 3D
 1. System siatki (Grid) w 3D (render/board_renderer.py): Wyliczenie, na jakich fizycznych pozycjach X, Y, Z znajdują się poszczególne przecięcia na stole.

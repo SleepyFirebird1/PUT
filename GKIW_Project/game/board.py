@@ -3,7 +3,7 @@ class Board:
         # Lista słowników przykład elementu: {'color: 'black', 'grid_x': 5, 'grid_y': 5}
         self.stones = []
 
-        self.current_turn = "black"
+        self.current_turn = "white"
 
     def add_stone(self, grid_x, grid_y):
         for stone in self.stones:

@@ -1,6 +1,7 @@
 import moderngl_window as mglw
-from pyrr import Matrix44, Vector3
-import math
+import glm
+import numpy as np
+from game.board import Board
 
 
 class Window(mglw.WindowConfig):
@@ -15,6 +16,15 @@ class Window(mglw.WindowConfig):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
+        self.board = Board()
+        self.board.add_stone(9, 9)
+        self.board.add_stone(9, 8)
+        self.board.add_stone(8, 9)
+        self.board.add_stone(0, 0)
+
+        self.CELL_SPACING = 0.026
+        self.TABLE_HEIGTH = 0.27
+
         # Głebokość 3D
         self.ctx.enable(self.ctx.DEPTH_TEST | self.ctx.CULL_FACE)
 
@@ -22,25 +32,20 @@ class Window(mglw.WindowConfig):
         try:
             self.table_scene = self.load_scene("Go-table.glb")
             self.stone_black = self.load_scene("Stone-black.glb")
+            self.stone_white = self.load_scene("Stone-white.glb")
         except Exception as e:
             print(f"Nie znaleziono modelu: {e}")
             self.table_scene = None
             self.stone_black = None
         # Ustawienie kamery
-        self.camera_pos = Vector3(
-            [0.0, 0.80, 0.75]
-        )  # Kamera jest w górze(Y) i przesunięta w stronę widza(Z)
-        self.camera_target = Vector3([0.0, 0.0, 0.0])  # Kamera patrzy w środek stołu
-        self.up_vector = Vector3(
-            [0.0, 1.0, 0.0]
-        )  # Wektor wskazujący, gdzie jest "Góra" dla kamery
+        # Lista dostępnych widoków: "isometric", "top_down"
+        self.set_camera_preset("top_down")
 
         # Macierz perspektywy
-        self.projection = Matrix44.perspective_projection(
-            45, self.aspect_ratio, 0.1, 1000.0
+        self.projection = glm.perspective(
+            glm.radians(45.0), self.aspect_ratio, 0.1, 1000.0
         )
 
-    # Używamy on_render, aby zaspokoić nowszą wersję biblioteki
     def on_render(self, time, frame_time):
         self.ctx.clear(0.2, 0.3, 0.3, 1.0)
 
@@ -48,25 +53,45 @@ class Window(mglw.WindowConfig):
             return
 
         # Macierz widoku
-        view = Matrix44.look_at(self.camera_pos, self.camera_target, self.up_vector)
+        view = glm.lookAt(self.camera_pos, self.camera_target, self.up_vector)
 
         # Rysowanie sceny ze stołem
         self.table_scene.draw(
-            projection_matrix=self.projection.astype("f4"),
-            camera_matrix=view.astype("f4"),
+            projection_matrix=self.projection,
+            camera_matrix=view,
         )
-        # 2. Rysujemy TESTOWY "czarny kamyczek"
-        if self.stone_black:
-            # Tworzymy ostateczną macierz łączącą przemieszczenie (Gdzie w grze) i skalę
-            scale_matrix = Matrix44.from_scale([0.3, 0.3, 0.3])
-            translate_matrix = Matrix44.from_translation([0.0, 0.30, 0.0])
-            stone_matrix = (translate_matrix * scale_matrix).astype(
-                "f4"
-            )  # PRZEŻARTY SYSTEM OMIJAJĄCY BUG .draw() -> Dla każdego Node z Mesh, podaj macierz MODELU
-            for node in self.stone_black.root_nodes:
-                if node.mesh:  # To omija martwe wezły i swiatła
-                    node.mesh.draw(
-                        projection_matrix=self.projection.astype("f4"),
-                        camera_matrix=view.astype("f4"),
-                        model_matrix=stone_matrix,
-                    )
+        for stone in self.board.stones:
+            offset_x = (stone["grid_x"] - 9) * self.CELL_SPACING
+            offset_y = self.TABLE_HEIGTH
+            offset_z = (stone["grid_y"] - 9) * self.CELL_SPACING
+
+            model_to_draw = (
+                self.stone_black if stone["color"] == "black" else self.stone_white
+            )
+            if model_to_draw:
+                # Macierz jednostkowa
+                base_matrix = glm.mat4(1.0)
+                # Translacja
+                translate_matrix = glm.translate(
+                    base_matrix, glm.vec3(offset_x, offset_y, offset_z)
+                )
+                # Skalowanie
+                scale_matrix = glm.scale(translate_matrix, glm.vec3(0.25, 0.25, 0.25))
+
+                for node in model_to_draw.root_nodes:
+                    if node.mesh:
+                        node.mesh.draw(
+                            projection_matrix=self.projection,
+                            camera_matrix=view,
+                            model_matrix=scale_matrix,
+                        )
+
+    def set_camera_preset(self, preset="isometric"):
+        if preset == "isometric":
+            self.camera_pos = glm.vec3(0, 0.65, 0.75)
+            self.camera_target = glm.vec3(0.0, 0.0, 0.0)
+            self.up_vector = glm.vec3(0.0, 1.0, 0.0)
+        elif preset == "top_down":
+            self.camera_pos = glm.vec3(0.0, 1.20, 0.0)
+            self.camera_target = glm.vec3(0.0, 0.0, 0.0)
+            self.up_vector = glm.vec3(0.0, 0.0, -1.0)
