@@ -1,7 +1,7 @@
 import moderngl_window as mglw
 import glm
-import numpy as np
 from game.board import Board
+from utils.raycasting import calculate_click_raycast
 
 
 class Window(mglw.WindowConfig):
@@ -15,15 +15,20 @@ class Window(mglw.WindowConfig):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.CELL_SPACING = 0.026
+        self.TABLE_HEIGTH = 0.27
 
         self.board = Board()
+        """
         self.board.add_stone(9, 9)
         self.board.add_stone(9, 8)
         self.board.add_stone(8, 9)
         self.board.add_stone(0, 0)
+        """
 
-        self.CELL_SPACING = 0.026
-        self.TABLE_HEIGTH = 0.27
+        # Obsługa myszki
+        self.mouse_pos = (0, 0)
+        self.left_mouse_button = False
 
         # Głebokość 3D
         self.ctx.enable(self.ctx.DEPTH_TEST | self.ctx.CULL_FACE)
@@ -39,7 +44,7 @@ class Window(mglw.WindowConfig):
             self.stone_black = None
         # Ustawienie kamery
         # Lista dostępnych widoków: "isometric", "top_down"
-        self.set_camera_preset("top_down")
+        self.set_camera_preset("isometric")
 
         # Macierz perspektywy
         self.projection = glm.perspective(
@@ -85,6 +90,24 @@ class Window(mglw.WindowConfig):
                             camera_matrix=view,
                             model_matrix=scale_matrix,
                         )
+
+    def on_mouse_press_event(self, x, y, button):
+        if button != 1:
+            return
+        result = calculate_click_raycast(
+            x,
+            y,
+            self.wnd.size,
+            self.projection,
+            self.camera_pos,
+            self.camera_target,
+            self.up_vector,
+            self.TABLE_HEIGTH,
+            self.CELL_SPACING,
+        )
+        if result is not None:
+            grid_x, grid_y = result
+            self.board.add_stone(grid_x, grid_y)
 
     def set_camera_preset(self, preset="isometric"):
         if preset == "isometric":
