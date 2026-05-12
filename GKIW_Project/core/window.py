@@ -2,13 +2,14 @@ import moderngl_window as mglw
 import glm
 from game.board import Board
 from utils.raycasting import calculate_click_raycast
+import numpy as np
 
 
 class Window(mglw.WindowConfig):
     # Wymuszamy wersję OpenGL 3.3 (kompatybilną z macOS)
     gl_version = (3, 3)
     title = "Go 3D"
-    window_size = (1280, 720)
+    window_size = (3840, 2160)
     aspect_ratio = 16 / 9
 
     resource_dir = "assets"
@@ -35,7 +36,7 @@ class Window(mglw.WindowConfig):
 
         # Ładowanie modeli 3D
         try:
-            self.table_scene = self.load_scene("Go-table.glb")
+            self.table_scene = self.load_scene("Go_table.glb")
             self.stone_black = self.load_scene("Stone-black.glb")
             self.stone_white = self.load_scene("Stone-white.glb")
         except Exception as e:
@@ -53,6 +54,20 @@ class Window(mglw.WindowConfig):
 
     def on_render(self, time, frame_time):
         self.ctx.clear(0.2, 0.3, 0.3, 1.0)
+
+        # Bezpieczne sprawdzanie orbity i płynne animowanie kamery
+        if hasattr(self, "target_angle") and self.camera_angle != self.target_angle:
+            # Płynne podążanie kąta (Delta Time * prędkosć interpolacji 5.0)
+            self.camera_angle += (
+                (self.target_angle - self.camera_angle) * frame_time * 1.75
+            )
+
+            # Wyrównanie w celu unikniecia nieskoñczenie mikroskopijnych drgań
+            if abs(self.target_angle - self.camera_angle) < 0.001:
+                self.camera_angle = self.target_angle
+
+            self.camera_pos.x = np.sin(self.camera_angle) * self.camera_radius
+            self.camera_pos.z = np.cos(self.camera_angle) * self.camera_radius
 
         if not self.table_scene:
             return
@@ -107,14 +122,35 @@ class Window(mglw.WindowConfig):
         )
         if result is not None:
             grid_x, grid_y = result
-            self.board.add_stone(grid_x, grid_y)
+            if self.board.check_stone(grid_x, grid_y):
+                self.board.delete_stone(grid_x, grid_y)
+            else:
+                self.board.add_stone(grid_x, grid_y)
+
+                # Dodaj 180 stopni do target angle po pomyślnym postawieniu kamienia (oś obrotu P)
+                if hasattr(self, "target_angle"):
+                    self.target_angle += np.pi
 
     def set_camera_preset(self, preset="isometric"):
-        if preset == "isometric":
-            self.camera_pos = glm.vec3(0, 0.65, 0.75)
-            self.camera_target = glm.vec3(0.0, 0.0, 0.0)
+        if preset == "isometric" or preset == "start":
+            self.camera_radius = (
+                2.40  # 3x wiekszy dystans zeby stol nie wydawal sie 3x wiekszy przy 4k
+            )
+            self.camera_height = 1.95
+            # Obrót początkowy o 90 stopni (pi/2) by celowała na prawidłowy krótki bok stolu
+            self.camera_angle = np.pi / 2
+            self.target_angle = self.camera_angle
+
+            self.camera_pos = glm.vec3(
+                np.sin(self.camera_angle) * self.camera_radius,
+                self.camera_height,
+                np.cos(self.camera_angle) * self.camera_radius,
+            )
+            self.camera_target = glm.vec3(0.0, 0.05, 0.0)
             self.up_vector = glm.vec3(0.0, 1.0, 0.0)
         elif preset == "top_down":
-            self.camera_pos = glm.vec3(0.0, 1.20, 0.0)
+            self.camera_pos = glm.vec3(0.0, 3.60, 0.0)
             self.camera_target = glm.vec3(0.0, 0.0, 0.0)
             self.up_vector = glm.vec3(0.0, 0.0, -1.0)
+            self.camera_angle = 0
+            self.target_angle = 0

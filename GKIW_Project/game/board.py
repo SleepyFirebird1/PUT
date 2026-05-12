@@ -3,7 +3,7 @@ class Board:
         # Lista słowników przykład elementu: {'color: 'black', 'grid_x': 5, 'grid_y': 5}
         self.stones = []
 
-        self.current_turn = "white"
+        self.current_turn = "black"
 
     def add_stone(self, grid_x, grid_y):
         for stone in self.stones:
@@ -19,3 +19,16 @@ class Board:
         else:
             self.current_turn = "black"
         return True
+
+    def delete_stone(self, grid_x, grid_y):
+        for stone in self.stones:
+            if stone["grid_x"] == grid_x and stone["grid_y"] == grid_y:
+                self.stones.remove(stone)
+                return True
+        return False
+
+    def check_stone(self, grid_x, grid_y):
+        for stone in self.stones:
+            if stone["grid_x"] == grid_x and stone["grid_y"] == grid_y:
+                return True
+        return False
