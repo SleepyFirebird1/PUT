@@ -10,7 +10,7 @@ class Window(mglw.WindowConfig):
     gl_version = (3, 3)
     title = "Go 3D"
     window_size = (3840, 2160)
-    aspect_ratio = 16 / 9
+    aspect_ratio = None
 
     resource_dir = "assets"
 
@@ -20,12 +20,6 @@ class Window(mglw.WindowConfig):
         self.TABLE_HEIGTH = 0.27
 
         self.board = Board()
-        """
-        self.board.add_stone(9, 9)
-        self.board.add_stone(9, 8)
-        self.board.add_stone(8, 9)
-        self.board.add_stone(0, 0)
-        """
 
         # Obsługa myszki
         self.mouse_pos = (0, 0)
@@ -47,16 +41,26 @@ class Window(mglw.WindowConfig):
         # Lista dostępnych widoków: "isometric", "top_down"
         self.set_camera_preset("isometric")
 
-        # Macierz perspektywy
+        # Macierz perspektywy z większym FOV w celu zachowania wielkości stołu przy 4K
+        self.projection = glm.perspective(glm.radians(102.33), 16 / 9, 0.1, 1000.0)
+
+    def resize(self, width: int, height: int):
+        if height == 0:
+            return
+        actual_aspect_ratio = width / height
         self.projection = glm.perspective(
-            glm.radians(45.0), self.aspect_ratio, 0.1, 1000.0
+            glm.radians(102.33), actual_aspect_ratio, 0.1, 1000.0
         )
 
     def on_render(self, time, frame_time):
-        self.ctx.clear(0.2, 0.3, 0.3, 1.0)
+        self.ctx.clear(0.53, 0.81, 0.92, 1.0)
 
         # Bezpieczne sprawdzanie orbity i płynne animowanie kamery
-        if hasattr(self, "target_angle") and self.camera_angle != self.target_angle:
+        if (
+            getattr(self, "camera_mode", "isometric") == "isometric"
+            and hasattr(self, "target_angle")
+            and self.camera_angle != self.target_angle
+        ):
             # Płynne podążanie kąta (Delta Time * prędkosć interpolacji 5.0)
             self.camera_angle += (
                 (self.target_angle - self.camera_angle) * frame_time * 1.75
@@ -109,10 +113,12 @@ class Window(mglw.WindowConfig):
     def on_mouse_press_event(self, x, y, button):
         if button != 1:
             return
+        window_width, window_height = self.wnd.size
+
         result = calculate_click_raycast(
             x,
             y,
-            self.wnd.size,
+            (window_width, window_height),
             self.projection,
             self.camera_pos,
             self.camera_target,
@@ -125,18 +131,16 @@ class Window(mglw.WindowConfig):
             if self.board.check_stone(grid_x, grid_y):
                 self.board.delete_stone(grid_x, grid_y)
             else:
-                self.board.add_stone(grid_x, grid_y)
-
-                # Dodaj 180 stopni do target angle po pomyślnym postawieniu kamienia (oś obrotu P)
-                if hasattr(self, "target_angle"):
-                    self.target_angle += np.pi
+                if self.board.add_stone(grid_x, grid_y):
+                    # Dodaj 180 stopni do target angle po pomyślnym postawieniu kamienia (oś obrotu P)
+                    if hasattr(self, "target_angle"):
+                        self.target_angle += np.pi
 
     def set_camera_preset(self, preset="isometric"):
+        self.camera_mode = preset
         if preset == "isometric" or preset == "start":
-            self.camera_radius = (
-                2.40  # 3x wiekszy dystans zeby stol nie wydawal sie 3x wiekszy przy 4k
-            )
-            self.camera_height = 1.95
+            self.camera_radius = 0.80
+            self.camera_height = 0.65
             # Obrót początkowy o 90 stopni (pi/2) by celowała na prawidłowy krótki bok stolu
             self.camera_angle = np.pi / 2
             self.target_angle = self.camera_angle
@@ -149,7 +153,7 @@ class Window(mglw.WindowConfig):
             self.camera_target = glm.vec3(0.0, 0.05, 0.0)
             self.up_vector = glm.vec3(0.0, 1.0, 0.0)
         elif preset == "top_down":
-            self.camera_pos = glm.vec3(0.0, 3.60, 0.0)
+            self.camera_pos = glm.vec3(0.0, 0.75, 0.0)
             self.camera_target = glm.vec3(0.0, 0.0, 0.0)
             self.up_vector = glm.vec3(0.0, 0.0, -1.0)
             self.camera_angle = 0

@@ -13,7 +13,7 @@ class Board:
         self.stones.append(
             {"color": self.current_turn, "grid_x": grid_x, "grid_y": grid_y}
         )
-
+        print(f"{grid_x}, {grid_y}")
         if self.current_turn == "black":
             self.current_turn = "white"
         else:
