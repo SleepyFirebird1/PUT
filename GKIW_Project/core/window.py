@@ -35,24 +35,50 @@ class Window(mglw.WindowConfig):
             self.stone_black = self.load_scene("Stone-black.glb")
             self.stone_white = self.load_scene("Stone-white.glb")
 
-            # Włączenie MipMap i filtrowania by wygładzić teksturę o dużej skali (tzw. anti-aliasing)
-            if self.table_scene:
-                for mat in self.table_scene.materials:
-                    if mat.mat_texture and mat.mat_texture.texture:
-                        tex = mat.mat_texture.texture
-                        tex.build_mipmaps()
-                        tex.filter = (self.ctx.LINEAR_MIPMAP_LINEAR, self.ctx.LINEAR)
-                        tex.anisotropy = 16.0  # maksymalne filtrowanie anizotropowe
-
         except Exception as e:
             print(f"Nie znaleziono modelu: {e}")
             self.table_scene = None
             self.stone_black = None
+
+        try:
+            self.custom_shader = self.load_program("custom_light.glsl")
+
+            self.custom_shader["lightPos"].value = (
+                -8.0,
+                3.0,
+                -6.0,
+            )
+            self.custom_shader["lightColor"].value = (
+                1.0,
+                0.55,
+                0.2,
+            )
+            self.custom_shader["lightPower"].value = 3.5
+            if self.table_scene:
+                for mesh in self.table_scene.meshes:
+                    if "TEXCOORD_0" in mesh.attributes:
+                        if mesh.material:
+                            mesh.material.program = self.custom_shader
+                            if (
+                                hasattr(mesh.material, "mat_texture")
+                                and mesh.material.mat_texture
+                                and mesh.material.mat_texture.texture
+                            ):
+                                tex = mesh.material.mat_texture.texture
+                                tex.build_mipmaps()
+                                tex.filter = (
+                                    self.ctx.LINEAR_MIPMAP_LINEAR,
+                                    self.ctx.LINEAR,
+                                )
+                                tex.anisotropy = 16.0
+
+        except Exception as e:
+            print(f"Nie udało się załadować customowego shadera: {e}")
         # Ustawienie kamery
         # Lista dostępnych widoków: "isometric", "top_down"
         self.set_camera_preset("isometric")
 
-        # Macierz perspektywy z większym FOV w celu zachowania wielkości stołu przy 4K
+        # Macierz perspektywy
         self.projection = glm.perspective(glm.radians(102.33), 16 / 9, 0.1, 1000.0)
 
     def resize(self, width: int, height: int):
@@ -65,13 +91,11 @@ class Window(mglw.WindowConfig):
 
     def on_render(self, time, frame_time):
         self.ctx.clear(0.53, 0.81, 0.92, 1.0)
-        # Bezpieczne sprawdzanie orbity i płynne animowanie kamery
         if (
             getattr(self, "camera_mode", "isometric") == "isometric"
             and hasattr(self, "target_angle")
             and self.camera_angle != self.target_angle
         ):
-            # Płynne podążanie kąta (Delta Time * prędkosć interpolacji 5.0)
             self.camera_angle += (
                 (self.target_angle - self.camera_angle) * frame_time * 1.75
             )
@@ -142,7 +166,6 @@ class Window(mglw.WindowConfig):
                 self.board.delete_stone(grid_x, grid_y)
             else:
                 if self.board.add_stone(grid_x, grid_y):
-                    # Dodaj 180 stopni do target angle po pomyślnym postawieniu kamienia (oś obrotu P)
                     if hasattr(self, "target_angle"):
                         self.target_angle += np.pi
 
@@ -151,7 +174,6 @@ class Window(mglw.WindowConfig):
         if preset == "isometric" or preset == "start":
             self.camera_radius = 0.80
             self.camera_height = 0.65
-            # Obrót początkowy o 90 stopni (pi/2) by celowała na prawidłowy krótki bok stolu
             self.camera_angle = np.pi / 2
             self.target_angle = self.camera_angle
 
