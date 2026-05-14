@@ -11,6 +11,7 @@ class Window(mglw.WindowConfig):
     title = "Go 3D"
     window_size = (3840, 2160)
     aspect_ratio = None
+    samples = 8  # Wygładzanie krawędzi (MSAA 8x) - eliminuje szarpanie ekranu w ruchu
 
     resource_dir = "assets"
 
@@ -30,9 +31,19 @@ class Window(mglw.WindowConfig):
 
         # Ładowanie modeli 3D
         try:
-            self.table_scene = self.load_scene("Go_table.glb")
+            self.table_scene = self.load_scene("Go-table.glb")
             self.stone_black = self.load_scene("Stone-black.glb")
             self.stone_white = self.load_scene("Stone-white.glb")
+
+            # Włączenie MipMap i filtrowania by wygładzić teksturę o dużej skali (tzw. anti-aliasing)
+            if self.table_scene:
+                for mat in self.table_scene.materials:
+                    if mat.mat_texture and mat.mat_texture.texture:
+                        tex = mat.mat_texture.texture
+                        tex.build_mipmaps()
+                        tex.filter = (self.ctx.LINEAR_MIPMAP_LINEAR, self.ctx.LINEAR)
+                        tex.anisotropy = 16.0  # maksymalne filtrowanie anizotropowe
+
         except Exception as e:
             print(f"Nie znaleziono modelu: {e}")
             self.table_scene = None
@@ -54,7 +65,6 @@ class Window(mglw.WindowConfig):
 
     def on_render(self, time, frame_time):
         self.ctx.clear(0.53, 0.81, 0.92, 1.0)
-
         # Bezpieczne sprawdzanie orbity i płynne animowanie kamery
         if (
             getattr(self, "camera_mode", "isometric") == "isometric"
