@@ -12,6 +12,21 @@ def calculate_click_raycast(
     TABLE_HEIGTH,
     CELL_SPACING,
 ):
+    """
+    @brief Calculates the grid coordinates based on a mouse click on the screen.
+
+    @param x Mouse X coordinate.
+    @param y Mouse Y coordinate.
+    @param window_size Tuple representing window width and height.
+    @param projection Projection matrix.
+    @param camera_pos Camera position vector.
+    @param camera_target Camera target vector.
+    @param up_vector Camera up vector.
+    @param TABLE_HEIGTH Height of the table.
+    @param CELL_SPACING Spacing between grid cells.
+
+    @return Tuple (grid_x, grid_y) if a valid cell was clicked, None otherwise.
+    """
 
     # Okno -> NDC (-1 do 1)
     view = glm.lookAt(camera_pos, camera_target, up_vector)

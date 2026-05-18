@@ -1,4 +1,9 @@
 class Board:
+    """
+    @class Board
+    @brief Represents the Go game board, managing stones and turns.
+    """
+
     def __init__(self):
         # Lista słowników przykład elementu: {'color: 'black', 'grid_x': 5, 'grid_y': 5}
         self.stones = []

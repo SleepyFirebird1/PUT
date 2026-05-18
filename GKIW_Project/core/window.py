@@ -6,6 +6,11 @@ import numpy as np
 
 
 class Window(mglw.WindowConfig):
+    """
+    @class Window
+    @brief Main application window handling rendering, camera and user input.
+    """
+
     # Wymuszamy wersję OpenGL 3.3 (kompatybilną z macOS)
     gl_version = (3, 3)
     title = "Go 3D"
