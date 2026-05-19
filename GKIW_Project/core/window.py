@@ -5,6 +5,34 @@ from utils.raycasting import calculate_click_raycast
 import numpy as np
 
 
+class CustomMeshProgram(mglw.scene.MeshProgram):
+    def __init__(self, program):
+        super().__init__(program=program)
+
+    def draw(
+        self,
+        mesh,
+        projection_matrix: glm.mat4,
+        model_matrix: glm.mat4,
+        camera_matrix: glm.mat4,
+        time: float = 0.0,
+    ) -> None:
+        if (
+            mesh.material
+            and hasattr(mesh.material, "mat_texture")
+            and mesh.material.mat_texture
+            and mesh.material.mat_texture.texture
+        ):
+            mesh.material.mat_texture.texture.use(0)
+            if "texture0" in self.program:
+                self.program["texture0"].value = 0
+
+        self.program["m_proj"].write(projection_matrix)
+        self.program["m_model"].write(model_matrix)
+        self.program["m_cam"].write(camera_matrix)
+        mesh.vao.render(self.program)
+
+
 class Window(mglw.WindowConfig):
     """
     @class Window
@@ -49,36 +77,34 @@ class Window(mglw.WindowConfig):
             self.custom_shader = self.load_program("custom_light.glsl")
 
             self.custom_shader["lightPos"].value = (
-                -8.0,
-                3.0,
-                -6.0,
-            )
+                -2.0,
+                5.0,
+                -2.0,
+            )  # Światło bliżej nad stołem
             self.custom_shader["lightColor"].value = (
                 1.0,
-                0.55,
-                0.2,
-            )
-            self.custom_shader["lightPower"].value = 3.5
-            if self.table_scene:
-                for mesh in self.table_scene.meshes:
+                1.0,
+                0.95,
+            )  # Prawie czysta biel, odrobina ciepła
+            self.custom_shader["lightPower"].value = 1.0
+
+            custom_prog = CustomMeshProgram(self.custom_shader)
+
+            def apply_my_shader(scene_model):
+                if not scene_model:
+                    return
+                for mesh in scene_model.meshes:
                     if "TEXCOORD_0" in mesh.attributes:
-                        if mesh.material:
-                            mesh.material.program = self.custom_shader
-                            if (
-                                hasattr(mesh.material, "mat_texture")
-                                and mesh.material.mat_texture
-                                and mesh.material.mat_texture.texture
-                            ):
-                                tex = mesh.material.mat_texture.texture
-                                tex.build_mipmaps()
-                                tex.filter = (
-                                    self.ctx.LINEAR_MIPMAP_LINEAR,
-                                    self.ctx.LINEAR,
-                                )
-                                tex.anisotropy = 16.0
+                        mesh.mesh_program = custom_prog
+
+            # Aplikujemy na wszystko!
+            apply_my_shader(self.table_scene)
+            apply_my_shader(self.stone_black)
+            apply_my_shader(self.stone_white)
 
         except Exception as e:
             print(f"Nie udało się załadować customowego shadera: {e}")
+
         # Ustawienie kamery
         # Lista dostępnych widoków: "isometric", "top_down"
         self.set_camera_preset("isometric")
