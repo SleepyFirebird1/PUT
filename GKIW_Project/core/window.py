@@ -1,80 +1,45 @@
+"""
+@file window.py
+@brief Główny plik aplikacji Go 3D kontrolujący okno, cykl życia renderowania i wejście użytkownika.
+"""
+
 import moderngl_window as mglw
 import glm
 from game.board import Board
 from game.scene import Scene
 from utils.raycasting import calculate_click_raycast
 import numpy as np
-
-
-class CustomMeshProgram(mglw.scene.MeshProgram):
-    def __init__(self, program):
-        super().__init__(program=program)
-
-    def draw(
-        self,
-        mesh,
-        projection_matrix: glm.mat4,
-        model_matrix: glm.mat4,
-        camera_matrix: glm.mat4,
-        time: float = 0.0,
-    ) -> None:
-        if (
-            mesh.material
-            and hasattr(mesh.material, "mat_texture")
-            and mesh.material.mat_texture
-            and mesh.material.mat_texture.texture
-        ):
-            mesh.material.mat_texture.texture.use(0)
-            if "texture0" in self.program:
-                self.program["texture0"].value = 0
-
-        self.program["m_proj"].write(projection_matrix)
-        self.program["m_model"].write(model_matrix)
-        self.program["m_cam"].write(camera_matrix)
-        mesh.vao.render(self.program)
-
-
-class CustomSolidMeshProgram(mglw.scene.MeshProgram):
-    def __init__(self, program):
-        super().__init__(program=program)
-
-    def draw(
-        self,
-        mesh,
-        projection_matrix: glm.mat4,
-        model_matrix: glm.mat4,
-        camera_matrix: glm.mat4,
-        time: float = 0.0,
-    ) -> None:
-
-        # Jeśli materiał posiada wbudowany kolor zBlendera, użyj go, jak nie - daj biały
-        if mesh.material and mesh.material.color:
-            self.program["baseColor"].value = tuple(mesh.material.color)
-        else:
-            self.program["baseColor"].value = (1.0, 1.0, 1.0, 1.0)
-
-        self.program["m_proj"].write(projection_matrix)
-        self.program["m_model"].write(model_matrix)
-        self.program["m_cam"].write(camera_matrix)
-        mesh.vao.render(self.program)
+from core.mesh_programs import (
+    CustomMeshProgram,
+    CustomSolidMeshProgram,
+    apply_custom_shaders,
+    draw_depth_node_global,
+    draw_node_with_matrix,
+)
+from core.floor import Floor
 
 
 class Window(mglw.WindowConfig):
     """
     @class Window
-    @brief Main application window handling rendering, camera and user input.
+    @brief Główne okno aplikacji odpowiedzialne za renderowanie sceny, obsługę kamery oraz interakcję z użytkownikiem.
+    @details Klasa konfiguruje okno gry, inicjalizuje bufory mapy cieni, zarządza dwuetapową pętlą renderowania oraz przechwytuje zdarzenia wejścia (mysz/raycasting).
     """
 
-    # Wymuszamy wersję OpenGL 3.3 (kompatybilną z macOS)
+    # Wymuszenie wersji OpenGL 3.3 (kompatybilnej z macOS)
     gl_version = (3, 3)
     title = "Go 3D"
     window_size = (3840, 2160)
     aspect_ratio = None
-    samples = 8  # Wygładzanie krawędzi (MSAA 8x) - eliminuje szarpanie ekranu w ruchu
+    samples = 8  # Wygładzanie krawędzi MSAA 8x
 
     resource_dir = "assets"
 
     def __init__(self, **kwargs):
+        """
+        @brief Inicjalizacja gry, ładowanie modeli, shaderów, konfiguracja oświetlenia i mapy cieni.
+        @param kwargs Dodatkowe argumenty konfiguracji okna.
+        """
         super().__init__(**kwargs)
         self.CELL_SPACING = 0.026
         self.TABLE_HEIGTH = 0.27
@@ -82,20 +47,15 @@ class Window(mglw.WindowConfig):
         self.board = Board()
         self.scene = Scene()
 
-        # Generowanie trawy (object_size, scene_size, board_size, counter)
-        # Rozmiary z komentarzy dziedziny: 0.4x0.4 trawka, 5x5 pole, 0.9x0.6 board (dostosuj jeśli podstawa inna)
-        self.scene.generation((0.4, 0.4), (5.0, 5.0), (0.9, 0.6), 30)
+        # Generowanie trawy
+        self.scene.generation((0.4, 0.4), (5.0, 5.0), (0.9, 0.6), 15)
 
-        # Obsługa myszki
-        self.mouse_pos = (0, 0)
-        self.left_mouse_button = False
-
-        # Głebokość 3D
+        # Włączenie testu głębokości oraz usuwania niewidocznych ścian
         self.ctx.enable(self.ctx.DEPTH_TEST | self.ctx.CULL_FACE)
 
         # Ładowanie modeli 3D
         try:
-            self.table_scene = self.load_scene("Go_table_demo.glb")
+            self.table_scene = self.load_scene("Go_tablev2.glb")
             self.stone_black = self.load_scene("Stone-black.glb")
             self.stone_white = self.load_scene("Stone-white.glb")
             self.grass = self.load_scene("Grass.glb")
@@ -105,50 +65,67 @@ class Window(mglw.WindowConfig):
             self.table_scene = None
             self.stone_black = None
 
+        # Konfiguracja shaderów i mapy cieni
         try:
             self.custom_shader = self.load_program("custom_light.glsl")
-            self.solid_shader = self.load_program("custom_light_solid.glsl")  # nowy!
+            self.solid_shader = self.load_program("custom_light_solid.glsl")
+            self.depth_program = self.load_program("depth.glsl")
 
-            # Parametry atmosfery - współdzielone
+            # Konfiguracja mapy cieni (Shadow Map)
+            self.shadow_size = (2048, 2048)
+            self.shadow_map = self.ctx.depth_texture(self.shadow_size)
+            self.shadow_fbo = self.ctx.framebuffer(depth_attachment=self.shadow_map)
+
+            self.light_pos = glm.vec3(0, 1, 1)
+
+            # Obliczanie macierzy rzutowania światła dla cieni
+            light_proj = glm.ortho(-2.5, 2.5, -2.5, 2.5, 0.1, 10.0)
+            light_view = glm.lookAt(
+                self.light_pos, glm.vec3(0, 0, 0), glm.vec3(0, 1, 0)
+            )
+            self.light_space_matrix = light_proj * light_view
+
+            # Konfiguracja parametrów oświetlenia otoczenia i światła punktowego
             for shader in [self.custom_shader, self.solid_shader]:
                 shader["ambientColor"].value = (0.2, 0.25, 0.35)
                 shader["ambientPower"].value = 1
 
-                shader["tableLightPos"].value = (0.0, 0.5, 0.5)
+                shader["tableLightPos"].value = tuple(self.light_pos)
                 shader["tableLightColor"].value = (1.0, 0.9, 0.7)
-                shader["tableLightPower"].value = 0.8
+                shader["tableLightPower"].value = 1
+
+                if "shadowMap" in shader:
+                    shader["shadowMap"].value = 1
+                if "m_light_space" in shader:
+                    shader["m_light_space"].write(self.light_space_matrix)
 
             custom_prog = CustomMeshProgram(self.custom_shader)
             solid_prog = CustomSolidMeshProgram(self.solid_shader)
 
-            def apply_my_shader(scene_model):
-                if not scene_model:
-                    return
-                for mesh in scene_model.meshes:
-                    # Jeśli mesh ma teksturę, dajemy mu shader teksturowy
-                    if "TEXCOORD_0" in mesh.attributes:
-                        mesh.mesh_program = custom_prog
-                    # Jeśli nie ma współrzędnych tekstury - wymuś u niego nowy shader!
-                    else:
-                        mesh.mesh_program = solid_prog
+            # Przypisanie shaderów do wczytanych modeli
+            apply_custom_shaders(self.table_scene, custom_prog, solid_prog)
+            apply_custom_shaders(self.stone_black, custom_prog, solid_prog)
+            apply_custom_shaders(self.stone_white, custom_prog, solid_prog)
+            apply_custom_shaders(self.grass, custom_prog, solid_prog)
 
-            # Aplikujemy na wszystko
-            apply_my_shader(self.table_scene)
-            apply_my_shader(self.stone_black)
-            apply_my_shader(self.stone_white)
-            apply_my_shader(self.grass)
+            # Inicjalizacja płaszczyzny ziemi
+            self.floor = Floor(self.ctx, self.depth_program, self.solid_shader)
 
         except Exception as e:
-            print(f"Nie udało się załadować customowego shadera: {e}")
+            print(f"Nie udało się załadować shadera: {e}")
 
-        # Ustawienie kamery
-        # Lista dostępnych widoków: "isometric", "top_down"
+        # Ustawienie domyślnego widoku kamery
         self.set_camera_preset("isometric")
 
-        # Macierz perspektywy
+        # Ustawienie macierzy perspektywy
         self.projection = glm.perspective(glm.radians(102.33), 16 / 9, 0.1, 1000.0)
 
     def resize(self, width: int, height: int):
+        """
+        @brief Aktualizacja stosunku boków projekcji przy zmianie rozmiaru okna.
+        @param width Nowa szerokość okna.
+        @param height Nowa wysokość okna.
+        """
         if height == 0:
             return
         actual_aspect_ratio = width / height
@@ -156,64 +133,46 @@ class Window(mglw.WindowConfig):
             glm.radians(102.33), actual_aspect_ratio, 0.1, 1000.0
         )
 
-    def on_render(self, time, frame_time):
-        # Mroczne, niemal czarne tło otoczenia pasujące pod mrok pokoju (zamiast błękitnego)
-        self.ctx.clear(0.05, 0.05, 0.08, 1.0)
-        if (
-            getattr(self, "camera_mode", "isometric") == "isometric"
-            and hasattr(self, "target_angle")
-            and self.camera_angle != self.target_angle
-        ):
-            self.camera_angle += (
-                (self.target_angle - self.camera_angle) * frame_time * 1.75
+    def draw_scene_objects(self, view, projection, is_depth_pass=False):
+        """
+        @brief Rysowanie wszystkich fizycznych obiektów sceny (podłoga, stół, trawa, kamienie).
+        @param view Macierz widoku kamery (lub światła).
+        @param projection Macierz rzutowania kamery (lub światła).
+        @param is_depth_pass Flaga informująca, czy wykonywane jest renderowanie głębi (Shadow Map).
+        """
+        # Rysowanie płaszczyzny ziemi
+        if hasattr(self, "floor") and self.floor:
+            self.floor.draw(view, projection, is_depth_pass)
+
+        # Rysowanie stołu
+        if is_depth_pass:
+            self.depth_program["m_light_space"].write(self.light_space_matrix)
+            for node in self.table_scene.root_nodes:
+                draw_depth_node_global(node, self.depth_program)
+        else:
+            self.table_scene.draw(
+                projection_matrix=projection,
+                camera_matrix=view,
             )
-
-            # Wyrównanie w celu unikniecia nieskoñczenie mikroskopijnych drgań
-            if abs(self.target_angle - self.camera_angle) < 0.001:
-                self.camera_angle = self.target_angle
-
-            self.camera_pos.x = np.sin(self.camera_angle) * self.camera_radius
-            self.camera_pos.z = np.cos(self.camera_angle) * self.camera_radius
-
-        if not self.table_scene:
-            return
-
-        # Macierz widoku
-        view = glm.lookAt(self.camera_pos, self.camera_target, self.up_vector)
-
-        # Rysowanie sceny ze stołem
-        self.table_scene.draw(
-            projection_matrix=self.projection,
-            camera_matrix=view,
-        )
 
         # Rysowanie wygenerowanej trawy
         if self.grass:
-
-            def draw_grass_node(node, matrix):
-                # Jeśli zależy nam na lokalnych transformacjach z GLB, moglibyśmy tu przemnożyć macierze,
-                # ale dla prostych modeli trawy zwykle wystarczy zastosować główną macierz całego obiektu.
-                if node.mesh:
-                    node.mesh.draw(
-                        projection_matrix=self.projection,
-                        camera_matrix=view,
-                        model_matrix=matrix,
-                    )
-                if hasattr(node, "children"):
-                    for child in node.children:
-                        draw_grass_node(child, matrix)
-
             for gx, gz in self.scene.objects:
                 base_matrix = glm.mat4(1.0)
-                # Ustawiamy trawę na wysokości z=0 lub bazowej dla trawy. Można dostosować `y`.
                 translate_matrix = glm.translate(base_matrix, glm.vec3(gx, 0.0, gz))
-
-                # Dodajemy lekką rotację losową? Na razie sama translacja, obrót i skala
                 scale_matrix = glm.scale(translate_matrix, glm.vec3(0.02, 0.02, 0.02))
 
                 for node in self.grass.root_nodes:
-                    draw_grass_node(node, scale_matrix)
+                    draw_node_with_matrix(
+                        node,
+                        self.depth_program,
+                        projection,
+                        view,
+                        scale_matrix,
+                        is_depth_pass,
+                    )
 
+        # Rysowanie kamieni na planszy
         for stone in self.board.stones:
             offset_x = (stone["grid_x"] - 9) * self.CELL_SPACING
             offset_y = self.TABLE_HEIGTH
@@ -223,24 +182,68 @@ class Window(mglw.WindowConfig):
                 self.stone_black if stone["color"] == "black" else self.stone_white
             )
             if model_to_draw:
-                # Macierz jednostkowa
                 base_matrix = glm.mat4(1.0)
-                # Translacja
                 translate_matrix = glm.translate(
                     base_matrix, glm.vec3(offset_x, offset_y, offset_z)
                 )
-                # Skalowanie
                 scale_matrix = glm.scale(translate_matrix, glm.vec3(0.25, 0.25, 0.25))
 
                 for node in model_to_draw.root_nodes:
-                    if node.mesh:
-                        node.mesh.draw(
-                            projection_matrix=self.projection,
-                            camera_matrix=view,
-                            model_matrix=scale_matrix,
-                        )
+                    draw_node_with_matrix(
+                        node,
+                        self.depth_program,
+                        projection,
+                        view,
+                        scale_matrix,
+                        is_depth_pass,
+                    )
+
+    def on_render(self, time, frame_time):
+        """
+        @brief Główna pętla renderująca wywoływana w każdej ramce. Kontroluje obrót kamery i dwuetapowe rysowanie.
+        @param time Czas systemowy od startu okna.
+        @param frame_time Delta czasu od poprzedniej klatki.
+        """
+        if (
+            getattr(self, "camera_mode", "isometric") == "isometric"
+            and hasattr(self, "target_angle")
+            and self.camera_angle != self.target_angle
+        ):
+            self.camera_angle += (
+                (self.target_angle - self.camera_angle) * frame_time * 1.75
+            )
+
+            # Wyrównanie kąta kamery w celu eliminacji drgań
+            if abs(self.target_angle - self.camera_angle) < 0.001:
+                self.camera_angle = self.target_angle
+
+            self.camera_pos.x = np.sin(self.camera_angle) * self.camera_radius
+            self.camera_pos.z = np.cos(self.camera_angle) * self.camera_radius
+
+        if not self.table_scene:
+            return
+
+        # Obliczanie macierzy widoku kamery
+        view = glm.lookAt(self.camera_pos, self.camera_target, self.up_vector)
+
+        # Generowanie mapy głębokości
+        self.shadow_fbo.use()
+        self.shadow_fbo.clear(depth=1.0)
+        self.draw_scene_objects(view, self.projection, is_depth_pass=True)
+
+        # Renderowanie właściwej sceny z kolorami i cieniowaniem
+        self.wnd.fbo.use()
+        self.ctx.clear(0.05, 0.05, 0.08, 1.0)
+        self.shadow_map.use(location=1)
+        self.draw_scene_objects(view, self.projection, is_depth_pass=False)
 
     def on_mouse_press_event(self, x, y, button):
+        """
+        @brief Obsługa kliknięcia myszy, raycastingu i interakcji z kamieniami planszy Go.
+        @param x Współrzędna X kursora w pikselach okna.
+        @param y Współrzędna Y kursora w pikselach okna.
+        @param button Kliknięty przycisk (lewy przycisk = 1).
+        """
         if button != 1:
             return
         window_width, window_height = self.wnd.size
@@ -266,6 +269,10 @@ class Window(mglw.WindowConfig):
                         self.target_angle += np.pi
 
     def set_camera_preset(self, preset="isometric"):
+        """
+        @brief Ustawienie wstępnie zdefiniowanej pozycji i orientacji kamery.
+        @param preset Nazwa układu kamery (np. "isometric").
+        """
         self.camera_mode = preset
         if preset == "isometric" or preset == "start":
             self.camera_radius = 0.80
@@ -280,9 +287,3 @@ class Window(mglw.WindowConfig):
             )
             self.camera_target = glm.vec3(0.0, 0.05, 0.0)
             self.up_vector = glm.vec3(0.0, 1.0, 0.0)
-        elif preset == "top_down":
-            self.camera_pos = glm.vec3(0.0, 0.75, 0.0)
-            self.camera_target = glm.vec3(0.0, 0.0, 0.0)
-            self.up_vector = glm.vec3(0.0, 0.0, -1.0)
-            self.camera_angle = 0
-            self.target_angle = 0

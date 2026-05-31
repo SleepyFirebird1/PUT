@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['window_0',['Window',['../classcore_1_1window_1_1_window.html',1,'core::window']]]
+  ['board_0',['Board',['../classgame_1_1board_1_1_board.html',1,'game::board']]]
 ];

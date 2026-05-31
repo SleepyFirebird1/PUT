@@ -29,6 +29,8 @@ void main() {
 
 #elif defined FRAGMENT_SHADER
 uniform sampler2D texture0;
+uniform sampler2D shadowMap;
+uniform mat4 m_light_space;
 
 uniform vec3 ambientColor;
 uniform float ambientPower;
@@ -62,6 +64,29 @@ void main() {
     
     // Wygaszamy światło względem dystansu!
     vec3 tableLighting = tableDiff * tableLightColor * tableLightPower * attenuation;
+    
+    // --- Obliczanie cienia ---
+    vec4 fragPosLightSpace = m_light_space * vec4(world_pos, 1.0);
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    projCoords = projCoords * 0.5 + 0.5;
+    
+    float shadow = 0.0;
+    if (projCoords.z <= 1.0) {
+        float currentDepth = projCoords.z;
+        float bias = max(0.005 * (1.0 - dot(norm, tableLightDir)), 0.001);
+        
+        vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
+        for(int x = -1; x <= 1; ++x) {
+            for(int y = -1; y <= 1; ++y) {
+                float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r; 
+                shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;        
+            }    
+        }
+        shadow /= 9.0;
+    }
+    
+    tableLighting *= (1.0 - shadow);
+    // -------------------------
     
     vec3 ambientLighting = ambientColor * ambientPower;
     

@@ -80,6 +80,6 @@ def clean_glb(filename):
 
 
 if __name__ == "__main__":
-    clean_glb("Go_table_demo.glb")
+    clean_glb("Go_tablev2.glb")
     clean_glb("Grass.glb")
     clean_glb("Flowers.glb")

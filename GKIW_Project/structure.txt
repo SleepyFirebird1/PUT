@@ -1,31 +1,34 @@
 GKIW_Project/
 │
-├── assets/                 # Zasoby graficzne i dźwiękowe
-│   ├── models/             # Twoje pliki .glb (stół, kamienie)
-│   ├── textures/           # Opcjonalne tekstury dodatkowe
-│   └── sounds/             # Opcjonalne dźwięki
+├── assets/                 # Zasoby graficzne (pliki .glb) oraz kody shaderów (.glsl)
+│   ├── Go_tablev2.glb      # Model stołu do gry Go z Blender-a (bez podłogi)
+│   ├── Go_table_demo.glb   # Zapasowy/starszy model stołu 3D
+│   ├── Stone-black.glb     # Model czarnego kamienia
+│   ├── Stone-white.glb     # Model białego kamienia
+│   ├── Grass.glb           # Model kępki trawy
+│   ├── Flowers.glb         # Model kwiatuszków otoczenia
+│   ├── custom_light.glsl   # Shader oświetlenia teksturowanego z cieniem i tłumieniem
+│   ├── custom_light_solid.glsl # Shader oświetlenia jednolitego z cieniem i tłumieniem
+│   └── depth.glsl          # Shader głębi dla generowania mapy cieni
 │
-├── core/                   # Główny pakiet z logiką aplikacji (lub nazwa np. 'go_game')
-│   ├── __init__.py         # Oznacza folder jako pakiet Pythona
-│   ├── window.py           # Klasa okna ModernGL (Twój główny kod renderujący)
-│   ├── camera.py           # Klasa do sterowania kamerą (obrót, fov, macierze)
-│   └── input_handler.py    # (Opcjonalnie) obsługa myszy/klawiatury
+├── core/                   # Główny pakiet z logiką aplikacji i renderowania
+│   ├── __init__.py         
+│   ├── window.py           # Klasa okna ModernGL (obsługa kamery, myszy, cykl życia renderowania)
+│   ├── mesh_programs.py    # Klasy programów siatek i funkcje pomocnicze rekurencyjnego rysowania
+│   └── floor.py            # Klasa Floor (generowanie 100x100m podłoża i jego renderowanie)
 │
-├── game/                   # Logika samej gry w Go (niezależna od grafiki 3D)
-│   ├── __init__.py
-│   ├── board.py            # Logika planszy 19x19, sprawdzanie zasad (bicia, ko)
-│   └── player.py           # Reprezentacja gracza, tury, punktacja
-│
-├── render/                 # Klasy pomagające w rysowaniu obiektów
-│   ├── __init__.py
-│   ├── scene_object.py     # Klasa bazowa dla rysowanych obiektów
-│   └── board_renderer.py   # Klasa dbająca o rysowanie planszy i kamieni na odpowiednich pozycjach
+├── game/                   # Logika planszy i otoczenia (niezależna od grafiki)
+│   ├── __init__.py         
+│   ├── board.py            # Logika planszy gry w Go (dodawanie/usuwanie kamieni)
+│   └── scene.py            # Logika generowania otoczenia (losowanie pozycji trawy)
 │
 ├── utils/                  # Funkcje pomocnicze
-│   ├── __init__.py
-│   └── raycast.py          # Matematyka do zamiany kliknięcia 2D na pozycję na planszy 3D
+│   ├── __init__.py         
+│   └── raycasting.py       # Obliczenia rzutowania promienia kliknięcia myszy 2D na pozycję planszy 3D
 │
-├── main.py                 # Punkt wejścia (tylko inicjalizuje okno i uruchamia grę)
-├── requirements.txt        # Lista zależności (moderngl, moderngl-window, pyrr)
-├── .gitignore              # Ignorowanie plików środowiska (np. __pycache__, venv)
-└── README.md               # Krótki opis jak uruchomić projekt
+├── main.py                 # Punkt wejścia (inicjalizacja okna i uruchomienie)
+├── fix_glb.py              # Skrypt czyszczący pliki .glb z nieobsługiwanych rozszerzeń glTF
+├── Doxyfile                # Plik konfiguracyjny generatora dokumentacji Doxygen
+├── html/                   # Wygenerowana dokumentacja HTML projektu (otwierać przez index.html)
+├── requirements.txt        # Lista zależności bibliotecznych (moderngl, moderngl-window, PyGLM, numpy)
+└── structure.txt           # Opis struktury katalogów i plików projektu (ten plik)

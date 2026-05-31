@@ -97,10 +97,197 @@ Inheritance diagram for core.window.Window:</div>
  <div class="center">
   <img src="classcore_1_1window_1_1_window.png" alt=""/>
  </div></div>
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 id="header-pub-methods" class="groupheader"><a id="pub-methods" name="pub-methods"></a>
+Public Member Functions</h2></td></tr>
+<tr class="memitem:afb4610a10e549716d351ee2c8e40ea60" id="r_afb4610a10e549716d351ee2c8e40ea60"><td class="memItemLeft">&#160;</td><td class="memItemRight"><a class="el" href="#afb4610a10e549716d351ee2c8e40ea60">__init__</a> (self, **kwargs)</td></tr>
+<tr class="memitem:a0d6b454655565dadccd6e1e36d370abe" id="r_a0d6b454655565dadccd6e1e36d370abe"><td class="memItemLeft">&#160;</td><td class="memItemRight"><a class="el" href="#a0d6b454655565dadccd6e1e36d370abe">resize</a> (self, int width, int height)</td></tr>
+<tr class="memitem:a5a85971c6188e201024379bc00968a39" id="r_a5a85971c6188e201024379bc00968a39"><td class="memItemLeft">&#160;</td><td class="memItemRight"><a class="el" href="#a5a85971c6188e201024379bc00968a39">draw_scene_objects</a> (self, view, projection, is_depth_pass=False)</td></tr>
+<tr class="memitem:ab01079a212a3824fd3d7b4a4a9634f1d" id="r_ab01079a212a3824fd3d7b4a4a9634f1d"><td class="memItemLeft">&#160;</td><td class="memItemRight"><a class="el" href="#ab01079a212a3824fd3d7b4a4a9634f1d">on_render</a> (self, time, frame_time)</td></tr>
+<tr class="memitem:a0b1f89f1c8a15de13efb72eb5da3c9b1" id="r_a0b1f89f1c8a15de13efb72eb5da3c9b1"><td class="memItemLeft">&#160;</td><td class="memItemRight"><a class="el" href="#a0b1f89f1c8a15de13efb72eb5da3c9b1">on_mouse_press_event</a> (self, x, y, button)</td></tr>
+<tr class="memitem:a22cfb0c98ed8ae1feb0e64d08510a591" id="r_a22cfb0c98ed8ae1feb0e64d08510a591"><td class="memItemLeft">&#160;</td><td class="memItemRight"><a class="el" href="#a22cfb0c98ed8ae1feb0e64d08510a591">set_camera_preset</a> (self, preset=&quot;isometric&quot;)</td></tr>
+</table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><pre class="fragment">@class Window
-@brief Main application window handling rendering, camera and user input.
-</pre> </div><hr/>The documentation for this class was generated from the following file:<ul>
+@brief Główne okno aplikacji odpowiedzialne za renderowanie sceny, obsługę kamery oraz interakcję z użytkownikiem.
+@details Klasa konfiguruje okno gry, inicjalizuje bufory mapy cieni, zarządza dwuetapową pętlą renderowania oraz przechwytuje zdarzenia wejścia (mysz/raycasting).
+</pre> </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
+<a id="afb4610a10e549716d351ee2c8e40ea60" name="afb4610a10e549716d351ee2c8e40ea60"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afb4610a10e549716d351ee2c8e40ea60">&#9670;&#160;</a></span>__init__()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">core.window.Window.__init__ </td>
+          <td>(</td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>self</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">**</td>          <td class="paramname"><span class="paramname"><em>kwargs</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<pre class="fragment">@brief Inicjalizacja gry, ładowanie modeli, shaderów, konfiguracja oświetlenia i mapy cieni.
+@param kwargs Dodatkowe argumenty konfiguracji okna.
+</pre> 
+</div>
+</div>
+<a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
+<a id="a5a85971c6188e201024379bc00968a39" name="a5a85971c6188e201024379bc00968a39"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5a85971c6188e201024379bc00968a39">&#9670;&#160;</a></span>draw_scene_objects()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">core.window.Window.draw_scene_objects </td>
+          <td>(</td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>self</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>view</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>projection</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>is_depth_pass</em></span><span class="paramdefsep"> = </span><span class="paramdefval">False</span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<pre class="fragment">@brief Rysowanie wszystkich fizycznych obiektów sceny (podłoga, stół, trawa, kamienie).
+@param view Macierz widoku kamery (lub światła).
+@param projection Macierz rzutowania kamery (lub światła).
+@param is_depth_pass Flaga informująca, czy wykonywane jest renderowanie głębi (Shadow Map).
+</pre> 
+</div>
+</div>
+<a id="a0b1f89f1c8a15de13efb72eb5da3c9b1" name="a0b1f89f1c8a15de13efb72eb5da3c9b1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0b1f89f1c8a15de13efb72eb5da3c9b1">&#9670;&#160;</a></span>on_mouse_press_event()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">core.window.Window.on_mouse_press_event </td>
+          <td>(</td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>self</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>x</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>y</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>button</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<pre class="fragment">@brief Obsługa kliknięcia myszy, raycastingu i interakcji z kamieniami planszy Go.
+@param x Współrzędna X kursora w pikselach okna.
+@param y Współrzędna Y kursora w pikselach okna.
+@param button Kliknięty przycisk (lewy przycisk = 1).
+</pre> 
+</div>
+</div>
+<a id="ab01079a212a3824fd3d7b4a4a9634f1d" name="ab01079a212a3824fd3d7b4a4a9634f1d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab01079a212a3824fd3d7b4a4a9634f1d">&#9670;&#160;</a></span>on_render()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">core.window.Window.on_render </td>
+          <td>(</td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>self</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>time</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>frame_time</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<pre class="fragment">@brief Główna pętla renderująca wywoływana w każdej ramce. Kontroluje obrót kamery i dwuetapowe rysowanie.
+@param time Czas systemowy od startu okna.
+@param frame_time Delta czasu od poprzedniej klatki.
+</pre> 
+</div>
+</div>
+<a id="a0d6b454655565dadccd6e1e36d370abe" name="a0d6b454655565dadccd6e1e36d370abe"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0d6b454655565dadccd6e1e36d370abe">&#9670;&#160;</a></span>resize()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">core.window.Window.resize </td>
+          <td>(</td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>self</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>width</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>height</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<pre class="fragment">@brief Aktualizacja stosunku boków projekcji przy zmianie rozmiaru okna.
+@param width Nowa szerokość okna.
+@param height Nowa wysokość okna.
+</pre> 
+</div>
+</div>
+<a id="a22cfb0c98ed8ae1feb0e64d08510a591" name="a22cfb0c98ed8ae1feb0e64d08510a591"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a22cfb0c98ed8ae1feb0e64d08510a591">&#9670;&#160;</a></span>set_camera_preset()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">core.window.Window.set_camera_preset </td>
+          <td>(</td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>self</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>preset</em></span><span class="paramdefsep"> = </span><span class="paramdefval">&quot;isometric&quot;</span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<pre class="fragment">@brief Ustawienie wstępnie zdefiniowanej pozycji i orientacji kamery.
+@param preset Nazwa układu kamery (np. "isometric").
+</pre> 
+</div>
+</div>
+<hr/>The documentation for this class was generated from the following file:<ul>
 <li>core/<b>window.py</b></li>
 </ul>
 </div><!-- contents -->
@@ -116,7 +303,7 @@ Inheritance diagram for core.window.Window:</div>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><b>core</b></li><li class="navelem"><b>window</b></li><li class="navelem"><a href="classcore_1_1window_1_1_window.html">Window</a></li>
+    <li class="navelem"><b>core</b></li><li class="navelem"><a href="namespacecore_1_1window.html">window</a></li><li class="navelem"><a href="classcore_1_1window_1_1_window.html">Window</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.16.1 </li>
   </ul>
 </div>
