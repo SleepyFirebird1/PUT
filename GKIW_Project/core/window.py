@@ -34,6 +34,31 @@ class CustomMeshProgram(mglw.scene.MeshProgram):
         mesh.vao.render(self.program)
 
 
+class CustomSolidMeshProgram(mglw.scene.MeshProgram):
+    def __init__(self, program):
+        super().__init__(program=program)
+
+    def draw(
+        self,
+        mesh,
+        projection_matrix: glm.mat4,
+        model_matrix: glm.mat4,
+        camera_matrix: glm.mat4,
+        time: float = 0.0,
+    ) -> None:
+
+        # Jeśli materiał posiada wbudowany kolor zBlendera, użyj go, jak nie - daj biały
+        if mesh.material and mesh.material.color:
+            self.program["baseColor"].value = tuple(mesh.material.color)
+        else:
+            self.program["baseColor"].value = (1.0, 1.0, 1.0, 1.0)
+
+        self.program["m_proj"].write(projection_matrix)
+        self.program["m_model"].write(model_matrix)
+        self.program["m_cam"].write(camera_matrix)
+        mesh.vao.render(self.program)
+
+
 class Window(mglw.WindowConfig):
     """
     @class Window
@@ -82,29 +107,32 @@ class Window(mglw.WindowConfig):
 
         try:
             self.custom_shader = self.load_program("custom_light.glsl")
+            self.solid_shader = self.load_program("custom_light_solid.glsl")  # nowy!
 
-            self.custom_shader["lightPos"].value = (
-                -2.0,
-                5.0,
-                -2.0,
-            )  # Światło bliżej nad stołem
-            self.custom_shader["lightColor"].value = (
-                1.0,
-                1.0,
-                0.95,
-            )  # Prawie czysta biel, odrobina ciepła
-            self.custom_shader["lightPower"].value = 1.0
+            # Parametry atmosfery - współdzielone
+            for shader in [self.custom_shader, self.solid_shader]:
+                shader["ambientColor"].value = (0.2, 0.25, 0.35)
+                shader["ambientPower"].value = 1
+
+                shader["tableLightPos"].value = (0.0, 0.5, 0.5)
+                shader["tableLightColor"].value = (1.0, 0.9, 0.7)
+                shader["tableLightPower"].value = 0.8
 
             custom_prog = CustomMeshProgram(self.custom_shader)
+            solid_prog = CustomSolidMeshProgram(self.solid_shader)
 
             def apply_my_shader(scene_model):
                 if not scene_model:
                     return
                 for mesh in scene_model.meshes:
+                    # Jeśli mesh ma teksturę, dajemy mu shader teksturowy
                     if "TEXCOORD_0" in mesh.attributes:
                         mesh.mesh_program = custom_prog
+                    # Jeśli nie ma współrzędnych tekstury - wymuś u niego nowy shader!
+                    else:
+                        mesh.mesh_program = solid_prog
 
-            # Aplikujemy na wszystko!
+            # Aplikujemy na wszystko
             apply_my_shader(self.table_scene)
             apply_my_shader(self.stone_black)
             apply_my_shader(self.stone_white)
@@ -129,7 +157,8 @@ class Window(mglw.WindowConfig):
         )
 
     def on_render(self, time, frame_time):
-        self.ctx.clear(0.53, 0.81, 0.92, 1.0)
+        # Mroczne, niemal czarne tło otoczenia pasujące pod mrok pokoju (zamiast błękitnego)
+        self.ctx.clear(0.05, 0.05, 0.08, 1.0)
         if (
             getattr(self, "camera_mode", "isometric") == "isometric"
             and hasattr(self, "target_angle")
