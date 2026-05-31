@@ -1,6 +1,7 @@
 import moderngl_window as mglw
 import glm
 from game.board import Board
+from game.scene import Scene
 from utils.raycasting import calculate_click_raycast
 import numpy as np
 
@@ -54,6 +55,11 @@ class Window(mglw.WindowConfig):
         self.TABLE_HEIGTH = 0.27
 
         self.board = Board()
+        self.scene = Scene()
+
+        # Generowanie trawy (object_size, scene_size, board_size, counter)
+        # Rozmiary z komentarzy dziedziny: 0.4x0.4 trawka, 5x5 pole, 0.9x0.6 board (dostosuj jeśli podstawa inna)
+        self.scene.generation((0.4, 0.4), (5.0, 5.0), (0.9, 0.6), 30)
 
         # Obsługa myszki
         self.mouse_pos = (0, 0)
@@ -64,9 +70,10 @@ class Window(mglw.WindowConfig):
 
         # Ładowanie modeli 3D
         try:
-            self.table_scene = self.load_scene("Go-table.glb")
+            self.table_scene = self.load_scene("Go_table_demo.glb")
             self.stone_black = self.load_scene("Stone-black.glb")
             self.stone_white = self.load_scene("Stone-white.glb")
+            self.grass = self.load_scene("Grass.glb")
 
         except Exception as e:
             print(f"Nie znaleziono modelu: {e}")
@@ -101,6 +108,7 @@ class Window(mglw.WindowConfig):
             apply_my_shader(self.table_scene)
             apply_my_shader(self.stone_black)
             apply_my_shader(self.stone_white)
+            apply_my_shader(self.grass)
 
         except Exception as e:
             print(f"Nie udało się załadować customowego shadera: {e}")
@@ -149,6 +157,34 @@ class Window(mglw.WindowConfig):
             projection_matrix=self.projection,
             camera_matrix=view,
         )
+
+        # Rysowanie wygenerowanej trawy
+        if self.grass:
+
+            def draw_grass_node(node, matrix):
+                # Jeśli zależy nam na lokalnych transformacjach z GLB, moglibyśmy tu przemnożyć macierze,
+                # ale dla prostych modeli trawy zwykle wystarczy zastosować główną macierz całego obiektu.
+                if node.mesh:
+                    node.mesh.draw(
+                        projection_matrix=self.projection,
+                        camera_matrix=view,
+                        model_matrix=matrix,
+                    )
+                if hasattr(node, "children"):
+                    for child in node.children:
+                        draw_grass_node(child, matrix)
+
+            for gx, gz in self.scene.objects:
+                base_matrix = glm.mat4(1.0)
+                # Ustawiamy trawę na wysokości z=0 lub bazowej dla trawy. Można dostosować `y`.
+                translate_matrix = glm.translate(base_matrix, glm.vec3(gx, 0.0, gz))
+
+                # Dodajemy lekką rotację losową? Na razie sama translacja, obrót i skala
+                scale_matrix = glm.scale(translate_matrix, glm.vec3(0.02, 0.02, 0.02))
+
+                for node in self.grass.root_nodes:
+                    draw_grass_node(node, scale_matrix)
+
         for stone in self.board.stones:
             offset_x = (stone["grid_x"] - 9) * self.CELL_SPACING
             offset_y = self.TABLE_HEIGTH
