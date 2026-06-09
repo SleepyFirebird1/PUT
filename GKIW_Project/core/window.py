@@ -17,6 +17,7 @@ from core.mesh_programs import (
     draw_node_with_matrix,
 )
 from core.floor import Floor
+from core.score_display import ScoreDisplay
 
 
 class Window(mglw.WindowConfig):
@@ -111,6 +112,11 @@ class Window(mglw.WindowConfig):
             # Inicjalizacja płaszczyzny ziemi
             self.floor = Floor(self.ctx, self.depth_program, self.solid_shader)
 
+            # Inicjalizacja wyświetlacza punktów
+            self.score_display = ScoreDisplay(
+                self.ctx, self.solid_shader, self.depth_program
+            )
+
         except Exception as e:
             print(f"Nie udało się załadować shadera: {e}")
 
@@ -197,6 +203,39 @@ class Window(mglw.WindowConfig):
                         scale_matrix,
                         is_depth_pass,
                     )
+
+        # Rysowanie wyników w 3D
+        if hasattr(self, "score_display"):
+            black_count = sum(
+                1 for stone in self.board.stones if stone["color"] == "black"
+            )
+            white_count = sum(
+                1 for stone in self.board.stones if stone["color"] == "white"
+            )
+
+            # Punktacja czarnych
+            black_pos = glm.vec3(0.0, self.TABLE_HEIGTH, -0.45)
+            self.score_display.draw_number(
+                black_count,
+                black_pos,
+                np.pi / 2,
+                (0.1, 0.1, 0.1, 1.0),
+                projection,
+                view,
+                is_depth_pass,
+            )
+
+            # Punktacja białych
+            white_pos = glm.vec3(0.0, self.TABLE_HEIGTH, 0.45)
+            self.score_display.draw_number(
+                white_count,
+                white_pos,
+                np.pi / 2,
+                (0.9, 0.9, 0.9, 1.0),
+                projection,
+                view,
+                is_depth_pass,
+            )
 
     def on_render(self, time, frame_time):
         """
