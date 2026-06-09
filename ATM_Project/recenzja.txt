@@ -1,0 +1,10 @@
+Projekt charakteryzuje się przemyślaną strukturą i podziałem na logiczne moduły. 
+Najważniejszym elementem programistycznym jest tutaj zastosowanie polimorfizmu dynamicznego w systemie generowania potwierdzeń.
+
+Wykorzystano do tego klasę abstrakcyjną IReceiptStrategy z metodami czysto wirtualnymi, co stanowi wzorcową i „czystą” implementację interfejsu. 
+Takie podejście (realizujące wzorzec Strategii) pozwala na elastyczne przełączanie się w czasie działania programu między różnymi formatami wydruku
+ – na przykład pełnym lub zanonimizowanym – bez modyfikowania głównej logiki aplikacji.
+
+Dużym atutem projektu jest również warstwa wizualna. 
+Zastosowanie pełnego interfejsu graficznego zamiast konsoli tekstowej sprawia, że symulacja bankomatu jest intuicyjna, 
+czytelna i w przekonujący sposób odwzorowuje działanie rzeczywistego urządzenia.

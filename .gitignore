@@ -23,7 +23,6 @@ dump*.txt
 dump*.py
 
 *.glb
-!*.glsl
 
 # Aby upewnić się, że nie ignorujemy plików planu ani bibliotek!
 !requirements.txt
