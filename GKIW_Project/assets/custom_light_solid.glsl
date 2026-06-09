@@ -3,7 +3,6 @@
 #if defined VERTEX_SHADER
 in vec3 in_position;
 in vec3 in_normal;
-// Usunęliśmy texcoord (bo roślinność go nie ma!)
 
 uniform mat4 m_proj;
 uniform mat4 m_model;
@@ -32,7 +31,6 @@ uniform vec3 tableLightPos;
 uniform vec3 tableLightColor;
 uniform float tableLightPower;
 
-// Zamiast tekstury używamy jednolitego koloru z Pythona
 uniform vec4 baseColor;
 
 in vec3 normal;
@@ -44,7 +42,7 @@ void main() {
     
     float distance = length(tableLightPos - world_pos);
     
-    // Parametry tłumienia (muszą być takie same jak w głównym shaderze)
+    // Parametry tłumienia
     float constant = 1.0;
     float linear = 0.09;
     float quadratic = 0.032; 
@@ -56,7 +54,7 @@ void main() {
     // Aplikacja tłumienia do siły światła
     vec3 tableLighting = tableDiff * tableLightColor * tableLightPower * attenuation;
     
-    // --- Obliczanie cienia ---
+    // Obliczanie cienia
     vec4 fragPosLightSpace = m_light_space * vec4(world_pos, 1.0);
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
     projCoords = projCoords * 0.5 + 0.5;
@@ -77,7 +75,6 @@ void main() {
     }
     
     tableLighting *= (1.0 - shadow);
-    // -------------------------
     
     vec3 ambientLighting = ambientColor * ambientPower;
     

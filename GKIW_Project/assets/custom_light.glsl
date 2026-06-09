@@ -14,14 +14,14 @@ out vec3 world_pos;
 out vec2 uv;
 
 void main() {
-    // 1. Obliczanie pozycji globalnej (World Space), niezależnej od kamery!
+    // Obliczanie pozycji globalnej (World Space), niezależnej od kamery!
     vec4 worldPos = m_model * vec4(in_position, 1.0);
     world_pos = worldPos.xyz;
     
-    // 2. Widok m_cam uzyty TYLKO do ustalenia na co patrzymy (gl_Position)
+    // Widok m_cam uzyty do ustalenia na co patrzymy
     gl_Position = m_proj * m_cam * worldPos;
     
-    // 3. Normalne rowniez tylko względem świata (aby swiatlo nie zalezalo od obrotu kamery)
+    // Normalne rowniez względem świata
     mat3 m_normal = transpose(inverse(mat3(m_model)));
     normal = m_normal * in_normal;
     uv = in_texcoord_0;
@@ -51,8 +51,7 @@ void main() {
     // Obliczanie dystansu od lampy do danego punktu na świecie
     float distance = length(tableLightPos - world_pos);
     
-    // Parametry tłumienia (Attenuation) - tu sterujesz zasięgiem światła
-    // Jeśli zwiększysz kwadratowy współczynnik (0.05), promień światła będzie mniejszy
+    // Parametry tłumienia
     float constant = 1.0;
     float linear = 0.09;
     float quadratic = 0.032; 
@@ -62,10 +61,10 @@ void main() {
     vec3 tableLightDir = normalize(tableLightPos - world_pos);
     float tableDiff = max(dot(norm, tableLightDir), 0.0);
     
-    // Wygaszamy światło względem dystansu!
+    // Wygaszanie światła względem dystansu
     vec3 tableLighting = tableDiff * tableLightColor * tableLightPower * attenuation;
     
-    // --- Obliczanie cienia ---
+    // Obliczanie cienia
     vec4 fragPosLightSpace = m_light_space * vec4(world_pos, 1.0);
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
     projCoords = projCoords * 0.5 + 0.5;
@@ -86,8 +85,6 @@ void main() {
     }
     
     tableLighting *= (1.0 - shadow);
-    // -------------------------
-    
     vec3 ambientLighting = ambientColor * ambientPower;
     
     vec3 finalColor = texColor.rgb * (ambientLighting + tableLighting);
