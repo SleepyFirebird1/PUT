@@ -1,0 +1,140 @@
+====== Projekt z grafiki komputerowej: Gra w Go 3D ======
+
+===== Projekt: Temat projektu =====
+
+| Data | Status projektu | Uwagi |
+| 2026-04-01 | [[gk:szablon_projektu|Wybór tematu]] | Temat: Gra w Go 3D |
+| 2026-04-15 | Wczytanie modeli (GLB) | [[opengl:przyklad_obj|GLB]] |
+| 2026-05-01 | Program cieniujący | custom_light.glsl |
+| 2026-05-15 | Teksturowanie | Modele zawierają tekstury |
+| 2026-05-20 | Oświetlenie | Cieniowanie (shadow mapping), tłumienie (attenuation) |
+| 2026-06-07 | Interakcja | Wyliczanie koordynatów uderzenia promienia (Raycasting) |
+
+----
+
+==== Streszczenie ====
+Projekt polega na stworzeniu w pełni trójwymiarowej gry planszowej "Go". Aplikacja symuluje trójwymiarowe środowisko ze stołem (goban) do gry, a także otoczenie takie jak trawa i kwiaty w tle. Głównymi założeniami projektu są: wczytywanie i wyświetlanie modeli 3D w formacie GLB, własny model oświetlenia z tłumieniem i cieniami, oraz interaktywny wybór pola do położenia kamienia na planszy z wykorzystaniem promienia (Raycasting) z pozycji kamery zależnie od miejsca kliknięcia myszą. Całość zaimplementowana jest z użyciem języka Python, biblioteki ModernGL i matematyki dla OpenGL z pakietu PyGLM.
+
+=== Słowa kluczowe: ===
+Go, Python, ModernGL, Raycasting, PyGLM, GLSL, Oświetlenie, Shadow Mapping, glTF (GLB).
+
+=== Słownik pojęć: ===
+
+^ Id ^ PL ^ EN ^ Opis/Akronim ^
+| [[https://www.wikidata.org/wiki/Q178570|Q178570]] | [[https://pl.wikipedia.org/wiki/OpenGL|OpenGL]] | [[https://en.wikipedia.org/wiki/OpenGL|OpenGL]] | [[https://wikis.khronos.org/opengl/Main_Page|OpenGL]] |
+| [[https://www.wikidata.org/wiki/Q779819|Q779819]] | [[https://pl.wikipedia.org/wiki/OpenGL_Shading_Language|OpenGL Shading Language]] | [[https://en.wikipedia.org/wiki/OpenGL_Shading_Language|OpenGL Shading Language]] | GLSL |
+| [[https://www.wikidata.org/wiki/Q633182|Q633182]] | [[https://pl.wikipedia.org/wiki/Shader|Shader]] | [[https://en.wikipedia.org/wiki/Shader|Shader]] | Program cieniujący |
+| | PyGLM | OpenGL Mathematics (GLM) for Python | [[https://wikis.khronos.org/opengl/Tools/GLM|GLM]] |
+| [[https://www.wikidata.org/wiki/Q11860238|Q11860238]] | | [[https://en.wikipedia.org/wiki/GLFW|GLFW]] | Wykorzystane przez moderngl-window |
+| [[https://www.wikidata.org/wiki/Q60179|Q60179]] | Bryła widzenia | [[https://en.wikipedia.org/wiki/Viewing_frustum|Viewing frustum]] | |
+| [[https://www.wikidata.org/wiki/Q1478122|Q1478122]] | Mapowanie cieni | [[https://en.wikipedia.org/wiki/Shadow_mapping|Shadow mapping]] | Technika generowania cieni |
+| [[https://www.wikidata.org/wiki/Q6405817|Q6405817]] | Normalna wierzchołka | [[https://en.wikipedia.org/wiki/Vertex_normal|Vertex normal]] | |
+| [[https://www.wikidata.org/wiki/Q2119595|Q2119595]] | | [[https://en.wikipedia.org/wiki/GlTF|glTF/GLB]] | Format modeli |
+| | Raycasting | [[https://en.wikipedia.org/wiki/Ray_casting|Raycasting]] | Technika użyta do interakcji |
+
+==== Techniki wizualizacji wykorzystane w projekcie ====
+
+  - Modele 3D wczytywane z formatu plików binarnych glTF (.glb).
+  - Teksturowanie
+    - Tekstury osadzone i wczytywane z modeli ``.glb``.
+  - Oświetlenie
+    - Oświetlenie ambientowe i rozproszone (diffuse).
+    - Tłumienie oświetlenia (Attenuation) z użyciem stałych ``constant``, ``linear``, ``quadratic`` wyliczane dla dystansu fragmentu od źródła światła (w pliku ``custom_light.glsl``).
+    - Mapowanie cieni (Shadow Mapping) realizowane poprzez dodatkowy przebieg renderowania głębi światła ze źródła światła (w pliku ``depth.glsl``) oraz filtrację PCF (Percentage-Closer Filtering) do łagodzenia krawędzi.
+  - Elementy losowości
+    - Losowe rozmieszczenie modeli w tle - pozycje ździebeł trawy oraz kwiatów wokół stołu losowane w klasie ``Scene`` z biblioteki standardowej ``random``.
+  - Szadery -> GLSL
+    - ``custom_light.glsl``: implementacja oświetlenia punktowego z teksturami z modelu.
+    - ``custom_light_solid.glsl``: implementacja oświetlenia punktowego dla brył jednolitych barwnie.
+    - ``depth.glsl``: program dedykowany do wyliczania głębi w perspektywie światła na potrzeby generowania map cieni.
+  - Przechwytywanie interakcji
+    - Implementacja raycastingu (w ``utils/raycasting.py``) – odwracanie rzutu perspektywicznego i macierzy widoku do obliczenia promienia (ray) na podstawie współrzędnych ekranu, w celu detekcji uderzenia na nieskończonej płaszczyźnie na wysokości planszy go.
+
+==== Wykorzystanie gotowych bibliotek modeli ====
+
+  - Zewnętrzne oprogramowanie do modelowania [[gk:blender|Blender]] zostało użyte do wygenerowania stołu, kamieni, trawy oraz kwiatów, a następnie odpowiedniego wyeksportowania zasobów do formatu ``.glb`` by ułatwić i zoptymalizować wczytywanie modeli w środowisku Python.
+  - Skrypt ``fix_glb.py`` został stworzony w celu oczyszczania modeli z rozszerzeń specyficznych dla niektórych programów (nieobsługiwanych przez domyślne loadery).
+
+==== Opis modeli ====
+
+^ Lp ^ Model ^ Opis ^
+| 1 | Go_tablev2.glb | Główny stół z narysowaną planszą do gry Go (19x19) |
+| 2 | Stone-black.glb | Pojedynczy model czarnego kamienia do postawienia |
+| 3 | Stone-white.glb | Pojedynczy model białego kamienia do postawienia |
+| 4 | Grass.glb | Drobne zarośla/kępka trawy użyte w losowym generatorze otoczenia |
+| 5 | Flowers.glb | Model kwiatów do losowego urozmaicenia środowiska |
+
+==== Animacje ====
+W grze interakcja nie zachodzi poprzez bezpośrednie animacje samych modeli (brak animacji szkieletowych czy interpolacji węzłów czasu), natomiast występuje ruch kamery, w pełni kontrolowany przez użytkownika podczas gry (np. orbita wokół stołu). Transformacje (skala i przesunięcie) obiektów wyliczane są w każdej ramce.
+
+==== Tryb demo ====
+Aplikacja z zasady ma stanowić interaktywne narzędzie. Z racji charakteru gry planszowej, środowisko otoczenia może być generowane całkowicie losowo podczas startu. Użytkownik decyduje w pełni, gdzie trafiają kolejne kamienie i pod jakim kątem analizuje planszę.
+
+==== Kluczowe fragmenty kodu ====
+
+Raycasting - rzutowanie kliknięcia na świat 3D:
+<code python utils/raycasting.py>
+    # Okno -> NDC (-1 do 1)
+    view = glm.lookAt(camera_pos, camera_target, up_vector)
+    viewport = glm.vec4(0.0, 0.0, float(window_size[0]), float(window_size[1]))
+
+    win_y = float(window_size[1]) - float(y)
+    near_point = glm.unProject(glm.vec3(x, win_y, 0.0), view, projection, viewport)
+    far_point = glm.unProject(glm.vec3(x, win_y, 1.0), view, projection, viewport)
+
+    ray_origin = near_point
+    ray_direction = glm.normalize(far_point - near_point)
+
+    # Obliczenie odległości na promieniu
+    t = (TABLE_HEIGTH - ray_origin.y) / ray_direction.y
+    hit_point = ray_origin + ray_direction * t
+</code>
+
+Oświetlenie na poziomie GLSL:
+<code glsl assets/custom_light.glsl>
+    // Kierunek światła
+    vec3 tableLightDir = normalize(tableLightPos - world_pos);
+    float tableDiff = max(dot(norm, tableLightDir), 0.0);
+    
+    // Tłumienie światła na podstawie dystansu!
+    float distance = length(tableLightPos - world_pos);
+    float attenuation = 1.0 / (constant + linear * distance + quadratic * (distance * distance));
+    vec3 tableLighting = tableDiff * tableLightColor * tableLightPower * attenuation;
+</code>
+
+Wyliczanie Cienia (Shadow Mapping) z filtrowaniem (PCF):
+<code glsl assets/custom_light.glsl>
+    float currentDepth = projCoords.z;
+    float bias = max(0.005 * (1.0 - dot(norm, tableLightDir)), 0.001);
+    vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
+    
+    for(int x = -1; x <= 1; ++x) {
+        for(int y = -1; y <= 1; ++y) {
+            float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r; 
+            shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;        
+        }    
+    }
+    shadow /= 9.0;
+    tableLighting *= (1.0 - shadow);
+</code>
+
+==== Pomiary czasu generowania sceny ====
+Pomiary profilowania można zamieścić w tym miejscu. Ponieważ środowisko polega głównie na bibliotece z akceleracją GPU (ModernGL), proces CPU w większości poświęcony jest wywołaniom systemowym oraz odświeżaniu pozycji kamery - przez to aplikacja potrafi wygenerować scenę utrzymującą stabilne i wysokie framerate'y (> 60 FPS).
+
+==== Efekty wizualizacji ====
+{{:gk:go_screenshot_1.jpg?600|Zrzut z gry}}
+{{:gk:go_screenshot_2.jpg?600|Zrzut z gry - otoczenie}}
+
+==== Podsumowanie ====
+Zaimplementowana została w pełni działająca aplikacja graficzna trójwymiarowej gry Go. Oświetlenie obiektów (Blinn-Phong z Attenuation i mapowaniem cieni) i interakcja przez "Raycasting" pozwalają na płynną i intuicyjną zabawę. Model oświetlenia wraz ze środowiskiem sprawiają, że scena zyskuje naturalny i wiarygodny wygląd na wyrenderowanej z pomocą języka Python i API ModernGL płaszczyźnie.
+
+==== Narzędzia ====
+  * **Język:** Python 3.x
+  * **Biblioteki Główne:** ModernGL (API OpenGL), Moderngl-Window (narzędzia okna i wczytywania zasobów), PyGLM (Macierze i wektory zgodne z GLM).
+  * **Modele 3D:** Program Blender (Eksport do GLB)
+  * **Dokumentacja:** Doxygen do struktury kodu, Dokuwiki
+
+==== Literatura ====
+  * [[https://learnopengl.com/|Learn OpenGL]] - Obszerna wiedza na temat programów cieniujących (Attenuation, Shadow mapping, Raycasting).
+  * [[https://moderngl.readthedocs.io/|Dokumentacja ModernGL i ModernGL-Window]].
+  * [[https://en.wikipedia.org/wiki/Ray_casting|Wikipedia: Ray casting]].

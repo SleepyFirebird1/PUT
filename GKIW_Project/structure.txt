@@ -1,0 +1,34 @@
+GKIW_Project/
+│
+├── assets/                 # Zasoby graficzne (pliki .glb) oraz kody shaderów (.glsl)
+│   ├── Go_tablev2.glb      # Model stołu do gry Go z Blender-a (bez podłogi)
+│   ├── Go_table_demo.glb   # Zapasowy/starszy model stołu 3D
+│   ├── Stone-black.glb     # Model czarnego kamienia
+│   ├── Stone-white.glb     # Model białego kamienia
+│   ├── Grass.glb           # Model kępki trawy
+│   ├── Flowers.glb         # Model kwiatuszków otoczenia
+│   ├── custom_light.glsl   # Shader oświetlenia teksturowanego z cieniem i tłumieniem
+│   ├── custom_light_solid.glsl # Shader oświetlenia jednolitego z cieniem i tłumieniem
+│   └── depth.glsl          # Shader głębi dla generowania mapy cieni
+│
+├── core/                   # Główny pakiet z logiką aplikacji i renderowania
+│   ├── __init__.py         
+│   ├── window.py           # Klasa okna ModernGL (obsługa kamery, myszy, cykl życia renderowania)
+│   ├── mesh_programs.py    # Klasy programów siatek i funkcje pomocnicze rekurencyjnego rysowania
+│   └── floor.py            # Klasa Floor (generowanie 100x100m podłoża i jego renderowanie)
+│
+├── game/                   # Logika planszy i otoczenia (niezależna od grafiki)
+│   ├── __init__.py         
+│   ├── board.py            # Logika planszy gry w Go (dodawanie/usuwanie kamieni)
+│   └── scene.py            # Logika generowania otoczenia (losowanie pozycji trawy)
+│
+├── utils/                  # Funkcje pomocnicze
+│   ├── __init__.py         
+│   └── raycasting.py       # Obliczenia rzutowania promienia kliknięcia myszy 2D na pozycję planszy 3D
+│
+├── main.py                 # Punkt wejścia (inicjalizacja okna i uruchomienie)
+├── fix_glb.py              # Skrypt czyszczący pliki .glb z nieobsługiwanych rozszerzeń glTF
+├── Doxyfile                # Plik konfiguracyjny generatora dokumentacji Doxygen
+├── html/                   # Wygenerowana dokumentacja HTML projektu (otwierać przez index.html)
+├── requirements.txt        # Lista zależności bibliotecznych (moderngl, moderngl-window, PyGLM, numpy)
+└── structure.txt           # Opis struktury katalogów i plików projektu (ten plik)
