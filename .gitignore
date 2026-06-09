@@ -22,7 +22,7 @@ bounds.txt
 dump*.txt
 dump*.py
 
-assets/
+*.glb
 
 # Aby upewnić się, że nie ignorujemy plików planu ani bibliotek!
 !requirements.txt
