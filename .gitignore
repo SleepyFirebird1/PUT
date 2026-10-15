@@ -24,6 +24,8 @@ dump*.py
 
 *.glb
 
+fast-downward/
+
 # Aby upewnić się, że nie ignorujemy plików planu ani bibliotek!
 !requirements.txt
 !plan.txt
