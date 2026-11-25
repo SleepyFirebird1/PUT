@@ -3,9 +3,9 @@ import numpy as np
 import librosa
 
 SR = 16000
-FMIN = 70.0
+FMIN = 65.0
 FMAX = 300.0
-PROG_F0 = 168.0
+PROG_F0 = 180.0
 MAKS_CZAS_SEK = 3.0
 DOMYSLNA_PLEC = "K"
 
@@ -36,23 +36,18 @@ def wyznacz_f0(y, sr):
 
     f0_ramki = librosa.yin(y, fmin=FMIN, fmax=FMAX, sr=sr)
 
-    # Odrzucenie wartości NaN oraz skrajnych granic pasma z ramek bezdźwięcznych
+    # Odrzucenie ewentualnych wartości NaN oraz błędów spoza zakresu głosu
     poprawne_f0 = []
     for wartosc in f0_ramki:
         if not np.isnan(wartosc):
-            if wartosc > FMIN + 1.0 and wartosc < FMAX - 1.0:
-                poprawne_f0.append(wartosc)
-
-    if len(poprawne_f0) == 0:
-        for wartosc in f0_ramki:
-            if not np.isnan(wartosc):
+            if wartosc >= FMIN and wartosc <= FMAX:
                 poprawne_f0.append(wartosc)
 
     if len(poprawne_f0) == 0:
         return None
 
-    mediana_f0 = float(np.median(poprawne_f0))
-    return mediana_f0
+    srednia_f0 = float(np.mean(poprawne_f0))
+    return srednia_f0
 
 
 def klasyfikuj_plec(f0):
