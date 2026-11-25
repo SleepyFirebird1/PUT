@@ -1,0 +1,14 @@
+Potrzebne biblioteki: dtw, librosa
+
+Zadanie wykonywane w parach.
+
+Termin oddania: + 3 tygodnie
+
+Waga: 3
+
+Proszę wysłać: skrypt <nazwisko1>_<nazwisko2>.py + ew. własne próbki
+
+Można korzystać z podstawowych bibliotek Python do przetwarzania sygnałów, nie wykorzystujemy ML/NN. Jeżeli masz watpliwość, czy biblioteka, której używasz jest ok, proszę o maila.
+
+Ostatnia modyfikacja: piątek, 6 listopada 2026, 13:45
+
